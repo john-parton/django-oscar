@@ -124,22 +124,22 @@ class Structured(Base):
         """
         if stockrecord is None:
             stockrecord = self.select_stockrecord(product)
-        price = self.pricing_policy(product, stockrecord)
+        pricing_policy = self.pricing_policy(product, stockrecord)
         return PurchaseInfo(
-            min_price=price,
-            max_price=price,
+            min_price=pricing_policy,
+            max_price=pricing_policy,
             availability=self.availability_policy(product, stockrecord),
             stockrecord=stockrecord)
 
     def fetch_for_parent(self, product):
         # Select children and associated stockrecords
         children_stock = self.select_children_stockrecords(product)
-        pricing = self.parent_pricing_policy(product, children_stock)
-        if isinstance(pricing, prices.Unavailable):
-            min_price, max_price = prices.Unavailable(), pricing.Unavailable()
+        pricing_policy = self.parent_pricing_policy(product, children_stock)
+        if isinstance(pricing_policy, prices.Unavailable):
+            min_price, max_price = prices.Unavailable(), pricing_policy.Unavailable()
         else:
-            pricing.sort()
-            min_price, max_price = pricing[0], pricing[-1]
+            pricing_policy.sort()
+            min_price, max_price = pricing_policy[0], pricing_policy[-1]
         return PurchaseInfo(
             min_price=min_price,
             max_price=max_price,
