@@ -135,8 +135,8 @@ class Structured(Base):
         # Select children and associated stockrecords
         children_stock = self.select_children_stockrecords(product)
         pricing_policy = self.parent_pricing_policy(product, children_stock)
-        if isinstance(pricing_policy, prices.Unavailable):
-            min_price, max_price = prices.Unavailable(), pricing_policy.Unavailable()
+        if not pricing_policy:
+            min_price, max_price = prices.Unavailable(), prices.Unavailable()
         else:
             pricing_policy.sort()
             min_price, max_price = pricing_policy[0], pricing_policy[-1]
@@ -236,13 +236,28 @@ class StockRequired(object):
     def parent_availability_policy(self, product, children_stock):
         # A parent product is available if one of its children is
         for child, stockrecord in children_stock:
-            policy = self.availability_policy(product, stockrecord)
+            policy = self.availability_policy(child, stockrecord)
             if policy.is_available_to_buy:
                 return availability.Available()
         return availability.Unavailable()
 
+class PricingPolicyMixin(object):
+    """
+    Default mixin uses the pricing_policy method to compute the
+    parent_pricing_policy.
+    """
 
-class NoTax(object):
+    def parent_pricing_policy(self, product, children_stock):
+        pricing = []
+        for child, stockrecord in children_stock:
+            child_policy = self.pricing_policy(child, stockrecord)
+            # Check to make sure price isn't deferred
+            # We have to omit these to prevent doing a comparison against None
+            if child_policy.excl_tax is not None:
+                pricing.append(child_policy)
+        return pricing
+
+class NoTax(PricingPolicyMixin):
     """
     Pricing policy mixin for use with the ``Structured`` base strategy.
     This mixin specifies zero tax and uses the ``price_excl_tax`` from the
@@ -258,20 +273,8 @@ class NoTax(object):
             excl_tax=stockrecord.price_excl_tax,
             tax=D('0.00'))
 
-    def parent_pricing_policy(self, product, children_stock):
-        pricing = []
-        for child, stockrecord in children_stock:
-            if stockrecord:
-                pricing.append(
-                    prices.FixedPrice(
-                        currency=stockrecord.price_currency,
-                        excl_tax=stockrecord.price_excl_tax,
-                        tax=D('0.00'))
-                    )
-        return pricing or prices.Unavailable()
 
-
-class FixedRateTax(object):
+class FixedRateTax(PricingPolicyMixin):
     """
     Pricing policy mixin for use with the ``Structured`` base strategy.  This
     mixin applies a fixed rate tax to the base price from the product's
@@ -290,21 +293,8 @@ class FixedRateTax(object):
             excl_tax=stockrecord.price_excl_tax,
             tax=tax)
 
-    def parent_pricing_policy(self, product, children_stock):
-        pricing = []
-        for child, stockrecord in children_stock:
-            if stockrecord:
-                tax = (stockrecord.price_excl_tax * self.rate).quantize(self.exponent)
-                pricing.append(
-                    prices.FixedPrice(
-                        currency=stockrecord.price_currency,
-                        excl_tax=stockrecord.price_excl_tax,
-                        tax=tax)
-                    )
-        return pricing or prices.Unavailable()
 
-
-class DeferredTax(object):
+class DeferredTax(PricingPolicyMixin):
     """
     Pricing policy mixin for use with the ``Structured`` base strategy.
     This mixin does not specify the product tax and is suitable to territories
@@ -317,17 +307,6 @@ class DeferredTax(object):
         return prices.FixedPrice(
             currency=stockrecord.price_currency,
             excl_tax=stockrecord.price_excl_tax)
-
-    def parent_pricing_policy(self, product, children_stock):
-        pricing = []
-        for child, stockrecord in children_stock:
-            if stockrecord:
-                pricing.append(
-                    prices.FixedPrice(
-                        currency=stockrecord.price_currency,
-                        excl_tax=stockrecord.price_excl_tax)
-                    )
-        return pricing or prices.Unavailable()
 
 
 # Example strategy composed of above mixins.  For real projects, it's likely
