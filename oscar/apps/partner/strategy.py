@@ -7,8 +7,13 @@ from . import availability, prices
 # A container for policies
 from oscar.core.decorators import deprecated
 
-PurchaseInfo = namedtuple(
-    'PurchaseInfo', ['price', 'availability', 'stockrecord'])
+BasePurchaseInfo = namedtuple(
+    'BasePurchaseInfo', ['min_price', 'max_price', 'availability', 'stockrecord'])
+
+class PurchaseInfo(BasePurchaseInfo):
+    @property
+    def price(self):
+        return self.min_price
 
 
 class Selector(object):
@@ -119,16 +124,25 @@ class Structured(Base):
         """
         if stockrecord is None:
             stockrecord = self.select_stockrecord(product)
+        pricing_policy = self.pricing_policy(product, stockrecord)
         return PurchaseInfo(
-            price=self.pricing_policy(product, stockrecord),
+            min_price=pricing_policy,
+            max_price=pricing_policy,
             availability=self.availability_policy(product, stockrecord),
             stockrecord=stockrecord)
 
     def fetch_for_parent(self, product):
         # Select children and associated stockrecords
         children_stock = self.select_children_stockrecords(product)
+        pricing_policy = self.parent_pricing_policy(product, children_stock)
+        if isinstance(pricing_policy, prices.Unavailable):
+            min_price, max_price = prices.Unavailable(), pricing_policy.Unavailable()
+        else:
+            pricing_policy.sort()
+            min_price, max_price = pricing_policy[0], pricing_policy[-1]
         return PurchaseInfo(
-            price=self.parent_pricing_policy(product, children_stock),
+            min_price=min_price,
+            max_price=max_price,
             availability=self.parent_availability_policy(
                 product, children_stock),
             stockrecord=None)
@@ -245,15 +259,16 @@ class NoTax(object):
             tax=D('0.00'))
 
     def parent_pricing_policy(self, product, children_stock):
-        stockrecords = [x[1] for x in children_stock if x[1] is not None]
-        if not stockrecords:
-            return prices.Unavailable()
-        # We take price from first record
-        stockrecord = stockrecords[0]
-        return prices.FixedPrice(
-            currency=stockrecord.price_currency,
-            excl_tax=stockrecord.price_excl_tax,
-            tax=D('0.00'))
+        pricing = []
+        for child, stockrecord in children_stock:
+            if stockrecord:
+                pricing.append(
+                    prices.FixedPrice(
+                        currency=stockrecord.price_currency,
+                        excl_tax=stockrecord.price_excl_tax,
+                        tax=D('0.00'))
+                    )
+        return pricing or prices.Unavailable()
 
 
 class FixedRateTax(object):
@@ -276,18 +291,17 @@ class FixedRateTax(object):
             tax=tax)
 
     def parent_pricing_policy(self, product, children_stock):
-        stockrecords = [x[1] for x in children_stock if x[1] is not None]
-        if not stockrecords:
-            return prices.Unavailable()
-
-        # We take price from first record
-        stockrecord = stockrecords[0]
-        tax = (stockrecord.price_excl_tax * self.rate).quantize(self.exponent)
-
-        return prices.FixedPrice(
-            currency=stockrecord.price_currency,
-            excl_tax=stockrecord.price_excl_tax,
-            tax=tax)
+        pricing = []
+        for child, stockrecord in children_stock:
+            if stockrecord:
+                tax = (stockrecord.price_excl_tax * self.rate).quantize(self.exponent)
+                pricing.append(
+                    prices.FixedPrice(
+                        currency=stockrecord.price_currency,
+                        excl_tax=stockrecord.price_excl_tax,
+                        tax=tax)
+                    )
+        return pricing or prices.Unavailable()
 
 
 class DeferredTax(object):
@@ -305,16 +319,15 @@ class DeferredTax(object):
             excl_tax=stockrecord.price_excl_tax)
 
     def parent_pricing_policy(self, product, children_stock):
-        stockrecords = [x[1] for x in children_stock if x[1] is not None]
-        if not stockrecords:
-            return prices.Unavailable()
-
-        # We take price from first record
-        stockrecord = stockrecords[0]
-
-        return prices.FixedPrice(
-            currency=stockrecord.price_currency,
-            excl_tax=stockrecord.price_excl_tax)
+        pricing = []
+        for child, stockrecord in children_stock:
+            if stockrecord:
+                pricing.append(
+                    prices.FixedPrice(
+                        currency=stockrecord.price_currency,
+                        excl_tax=stockrecord.price_excl_tax)
+                    )
+        return pricing or prices.Unavailable()
 
 
 # Example strategy composed of above mixins.  For real projects, it's likely
