@@ -34,7 +34,7 @@ class Base(object):
     currency = None
 
     # Used to enable sorting of prices
-    # Ignores currency, but is otherwise correct if all Base instances are the same price
+    # Ignores currency, but is correct if all Base instances are the same currency
     def __cmp__(self, other):
         return self.effective_price - other.effective_price
 
