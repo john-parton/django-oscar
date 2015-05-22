@@ -327,8 +327,8 @@ class ProductForm(forms.ModelForm):
             except exceptions.ObjectDoesNotExist:
                 pass
             else:
+                # We need to pass a queryset
                 # Duck type managers for multi_value field
-                # We don't want to pass a manager to initial
                 if hasattr(value, 'all'):
                     value = value.all()
                 kwargs['initial']['attr_%s' % attribute.code] = value
