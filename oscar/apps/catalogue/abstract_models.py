@@ -1054,6 +1054,10 @@ class AbstractProductAttributeValue(models.Model):
         return getattr(self, property_name, self.value)
 
     @property
+    def _multi_option_as_text(self):
+        return ', '.join(unicode(option) for option in self.value_multi_option.all())
+
+    @property
     def _richtext_as_text(self):
         return strip_tags(self.value)
 
