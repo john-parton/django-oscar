@@ -1022,7 +1022,7 @@ class AbstractProductAttributeValue(models.Model):
     value_date = models.DateField(_('Date'), blank=True, null=True)
     value_multi_option = models.ManyToManyField(
         'catalogue.AttributeOption', blank=True, null=True,
-        related_name='+',
+        related_name='multi_valued_attribute_values',
         verbose_name=_("Value multi option"))
     value_option = models.ForeignKey(
         'catalogue.AttributeOption', blank=True, null=True,
