@@ -327,6 +327,10 @@ class ProductForm(forms.ModelForm):
             except exceptions.ObjectDoesNotExist:
                 pass
             else:
+                # Duck type managers for multi_value field
+                # We don't want to pass a manager to initial
+                if hasattr(value, 'all'):
+                    value = value.all()
                 kwargs['initial']['attr_%s' % attribute.code] = value
 
     def add_attribute_fields(self, product_class, is_parent=False):
