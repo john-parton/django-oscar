@@ -317,6 +317,10 @@ class ProductForm(forms.ModelForm):
             except exceptions.ObjectDoesNotExist:
                 pass
             else:
+                # We need to pass a queryset
+                # Duck type managers for multi_value field
+                if hasattr(value, 'all'):
+                    value = value.all()
                 kwargs['initial']['attr_%s' % attribute.code] = value
 
     def add_attribute_fields(self, product_class, is_parent=False):
