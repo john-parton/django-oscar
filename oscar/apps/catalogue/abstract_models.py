@@ -1042,7 +1042,10 @@ class AbstractProductAttributeValue(models.Model):
         null=True, blank=True, editable=False)
 
     def _get_value(self):
-        return getattr(self, 'value_%s' % self.attribute.type)
+        value = getattr(self, 'value_%s' % self.attribute.type)
+        if hasattr(value, 'all'):
+            value = value.all()
+        return value
 
     def _set_value(self, new_value):
         if self.attribute.is_option and isinstance(new_value, six.string_types):
