@@ -107,10 +107,8 @@ class ProductDetailView(DetailView):
             return [self.template_name]
 
         return [
-            '%s/detail-for-upc-%s.html' % (
-                self.template_folder, self.object.upc),
             '%s/detail-for-class-%s.html' % (
-                self.template_folder, self.object.get_product_class().slug),
+                self.template_folder, self.object.product_class.slug),
             '%s/detail.html' % (self.template_folder)]
 
 
