@@ -43,6 +43,9 @@ class ProductAttributeInline(admin.TabularInline):
     model = ProductAttribute
     extra = 2
 
+class ProductAttributeValueInline(admin.TabularInline):
+    model = ProductAttributeValue
+    extra = 2
 
 class ProductClassAdmin(admin.ModelAdmin):
     list_display = ('name', 'requires_shipping', 'track_stock')
@@ -62,7 +65,9 @@ class ChildProductForm(forms.ModelForm):
 
 class ChildProductAdmin(admin.ModelAdmin):
     form = ChildProductForm
-    inlines = [StockRecordInline]
+    list_display = ['title', 'parent', 'date_created']
+    inlines = [StockRecordInline, ProductAttributeValueInline]
+    list_filter = ['parent__is_discountable']
 
 class ChildProductInline(admin.TabularInline):
     model = ChildProduct
