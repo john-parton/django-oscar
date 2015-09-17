@@ -28,10 +28,6 @@ class ProductTable(DashboardTable):
         template_name='dashboard/catalogue/product_row_variants.html',
         orderable=False
     )
-    stock_records = TemplateColumn(
-        verbose_name=_('Stock records'),
-        template_name='dashboard/catalogue/product_row_stockrecords.html',
-        orderable=False)
     actions = TemplateColumn(
         verbose_name=_('Actions'),
         template_name='dashboard/catalogue/product_row_actions.html',
@@ -41,9 +37,9 @@ class ProductTable(DashboardTable):
 
     class Meta(DashboardTable.Meta):
         model = Product
-        fields = ('upc', 'date_updated')
-        sequence = ('title', 'upc', 'image', 'product_class', 'variants',
-                    'stock_records', '...', 'date_updated', 'actions')
+        fields = ('date_updated', )
+        sequence = ('title', 'image', 'product_class', 'variants',
+                    '...', 'date_updated', 'actions')
         order_by = '-date_updated'
 
 
