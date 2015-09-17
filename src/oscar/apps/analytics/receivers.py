@@ -76,7 +76,11 @@ def _record_user_order(user, order):
 def receive_product_view(sender, product, user, **kwargs):
     if kwargs.get('raw', False):
         return
-    _update_counter(ProductRecord, 'num_views', {'product': product})
+
+    # This has got to be pretty inefficient
+    for child in product.children.all():
+        _update_counter(ProductRecord, 'num_views', {'product': child})
+
     if user and user.is_authenticated():
         _update_counter(UserRecord, 'num_product_views', {'user': user})
         UserProductView.objects.create(product=product, user=user)

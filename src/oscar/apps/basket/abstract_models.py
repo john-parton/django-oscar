@@ -123,7 +123,7 @@ class AbstractBasket(models.Model):
                 self.lines
                 .select_related('product', 'stockrecord')
                 .prefetch_related(
-                    'attributes', 'product__images'))
+                    'attributes', 'product__parent__images'))
         return self._lines
 
     def is_quantity_allowed(self, qty):

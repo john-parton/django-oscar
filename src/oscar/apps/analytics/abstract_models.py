@@ -16,7 +16,7 @@ class AbstractProductRecord(models.Model):
     """
 
     product = models.OneToOneField(
-        'catalogue.Product', verbose_name=_("Product"),
+        'catalogue.ChildProduct', verbose_name=_("Product"),
         related_name='stats')
 
     # Data used for generating a score
