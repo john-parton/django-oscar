@@ -427,25 +427,28 @@ class AbstractProduct(models.Model):
         """
         Return a product's title or it's parent's title if it has no title
         """
-        return title
+        return self.title
     get_title.short_description = pgettext_lazy(u"Product title", u"Title")
 
     def get_product_class(self):
         """
         Return a product's item class. Child products inherit their parent's.
-        """return self.product_class
+        """
+        return self.product_class
     get_product_class.short_description = _("Product class")
 
     def get_is_discountable(self):
         """
         At the moment, is_discountable can't be set individually for child
         products; they inherit it from their parent.
-        """return self.is_discountable
+        """
+        return self.is_discountable
 
     def get_categories(self):
         """
         Return a product's categories or parent's if there is a parent product.
-        """return self.categories
+        """
+        return self.categories
     get_categories.short_description = _("Categories")
 
     # Images
@@ -1041,7 +1044,7 @@ class AbstractProductAttributeValue(models.Model):
     attribute = models.ForeignKey(
         'catalogue.ProductAttribute', verbose_name=_("Attribute"))
     product = models.ForeignKey(
-        'catalogue.Product', related_name='attribute_values',
+        'catalogue.ChildProduct', related_name='attribute_values',
         verbose_name=_("Product"))
 
     value_text = models.TextField(_('Text'), blank=True, null=True)
