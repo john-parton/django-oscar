@@ -1,8 +1,10 @@
 from django.contrib import admin
+from django import forms
+from django.db.models.aggregates import Count
+
 from treebeard.admin import TreeAdmin
 
 from oscar.core.loading import get_model
-from django.db.models.aggregates import Count
 
 AttributeOption = get_model('catalogue', 'AttributeOption')
 AttributeOptionGroup = get_model('catalogue', 'AttributeOptionGroup')
@@ -17,6 +19,7 @@ ProductClass = get_model('catalogue', 'ProductClass')
 ProductImage = get_model('catalogue', 'ProductImage')
 ProductRecommendation = get_model('catalogue', 'ProductRecommendation')
 
+StockRecord = get_model('partner', 'StockRecord')
 
 class AttributeInline(admin.TabularInline):
     model = ProductAttributeValue
@@ -32,6 +35,10 @@ class CategoryInline(admin.TabularInline):
     extra = 1
 
 
+class StockRecordInline(admin.TabularInline):
+    model = StockRecord
+    extra = 2
+
 class ProductAttributeInline(admin.TabularInline):
     model = ProductAttribute
     extra = 2
@@ -41,9 +48,25 @@ class ProductClassAdmin(admin.ModelAdmin):
     list_display = ('name', 'requires_shipping', 'track_stock')
     inlines = [ProductAttributeInline]
 
+class ChildProductForm(forms.ModelForm):
+
+    def clean_upc(self):
+        # Set upc to be NULL if it's an empty string in the admin
+        # Lets us save children without a UPC
+        if self.cleaned_data.get('upc') == '':
+            self.cleaned_data['upc'] = None
+
+    class Meta:
+        model = ChildProduct
+        fields = '__all__'
+
+class ChildProductAdmin(admin.ModelAdmin):
+    form = ChildProductForm
+    inlines = [StockRecordInline]
 
 class ChildProductInline(admin.TabularInline):
     model = ChildProduct
+    form = ChildProductForm
     extra = 2
 
 class ProductAdmin(admin.ModelAdmin):
@@ -92,6 +115,7 @@ class CategoryAdmin(TreeAdmin):
 
 admin.site.register(ProductClass, ProductClassAdmin)
 admin.site.register(Product, ProductAdmin)
+admin.site.register(ChildProduct, ChildProductAdmin)
 admin.site.register(ProductAttribute, ProductAttributeAdmin)
 admin.site.register(ProductAttributeValue, ProductAttributeValueAdmin)
 admin.site.register(AttributeOptionGroup, AttributeOptionGroupAdmin)

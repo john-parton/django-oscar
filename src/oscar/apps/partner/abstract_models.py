@@ -87,8 +87,8 @@ class AbstractStockRecord(models.Model):
     information for the customer.
     """
     product = models.ForeignKey(
-        'catalogue.Product', related_name="stockrecords",
-        verbose_name=_("Product"))
+        'catalogue.ChildProduct', related_name="stockrecords",
+        verbose_name=_("Child product"))
     partner = models.ForeignKey(
         'partner.Partner', verbose_name=_("Partner"),
         related_name='stockrecords')

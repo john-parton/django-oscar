@@ -8,6 +8,7 @@ from oscar.core.loading import get_class, get_model
 from oscar.core.utils import slugify
 from oscar.forms.widgets import ImageInput
 
+ChildProduct = get_model('catalogue', 'ChildProduct')
 Product = get_model('catalogue', 'Product')
 ProductClass = get_model('catalogue', 'ProductClass')
 ProductAttribute = get_model('catalogue', 'ProductAttribute')
@@ -81,7 +82,7 @@ class StockRecordForm(forms.ModelForm):
 
 
 BaseStockRecordFormSet = inlineformset_factory(
-    Product, StockRecord, form=StockRecordForm, extra=1)
+    ChildProduct, StockRecord, form=StockRecordForm, extra=1)
 
 
 class StockRecordFormSet(BaseStockRecordFormSet):
