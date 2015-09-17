@@ -35,6 +35,13 @@ if not is_model_registered('catalogue', 'Product'):
     __all__.append('Product')
 
 
+if not is_model_registered('catalogue', 'ChildProduct'):
+    class ChildProduct(AbstractChildProduct):
+        pass
+
+    __all__.append('ChildProduct')
+
+
 if not is_model_registered('catalogue', 'ProductRecommendation'):
     class ProductRecommendation(AbstractProductRecommendation):
         pass
