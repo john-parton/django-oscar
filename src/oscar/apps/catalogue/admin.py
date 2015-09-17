@@ -2,12 +2,14 @@ from django.contrib import admin
 from treebeard.admin import TreeAdmin
 
 from oscar.core.loading import get_model
+from django.db.models.aggregates import Count
 
 AttributeOption = get_model('catalogue', 'AttributeOption')
 AttributeOptionGroup = get_model('catalogue', 'AttributeOptionGroup')
 Category = get_model('catalogue', 'Category')
 Option = get_model('catalogue', 'Option')
 Product = get_model('catalogue', 'Product')
+ChildProduct = get_model('catalogue', 'ChildProduct')
 ProductAttribute = get_model('catalogue', 'ProductAttribute')
 ProductAttributeValue = get_model('catalogue', 'ProductAttributeValue')
 ProductCategory = get_model('catalogue', 'ProductCategory')
@@ -40,17 +42,26 @@ class ProductClassAdmin(admin.ModelAdmin):
     inlines = [ProductAttributeInline]
 
 
+class ChildProductInline(admin.TabularInline):
+    model = ChildProduct
+    extra = 2
+
 class ProductAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_created'
-    list_display = ('title', 'product_class', 'date_created')
+    list_display = ('title', 'product_class', 'children__count', 'date_created')
     list_filter = ['is_discountable']
-    inlines = [CategoryInline, ProductRecommendationInline]
+    inlines = [CategoryInline, ChildProductInline, ProductRecommendationInline]
     prepopulated_fields = {"slug": ("title",)}
     search_fields = ['title']
 
+    def children__count(self, obj):
+        return obj.children__count
+    children__count.short_description = 'Number of children'
+    children__count.admin_order_field = 'children__count'
+
     def get_queryset(self, request):
         qs = super(ProductAdmin, self).get_queryset(request)
-        return qs.select_related('product_class')
+        return qs.select_related('product_class').annotate(Count('children'))
 
 
 class ProductAttributeAdmin(admin.ModelAdmin):
