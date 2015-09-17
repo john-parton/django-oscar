@@ -107,7 +107,7 @@ class ProductListView(SingleTableMixin, generic.TemplateView):
         """
         Build the queryset for this list
         """
-        queryset = Product.browsable.base_queryset()
+        queryset = Product.objects.all()
         queryset = self.filter_queryset(queryset)
         queryset = self.apply_search(queryset)
         return queryset
@@ -618,7 +618,7 @@ class ProductLookupView(ObjectLookupView):
     model = Product
 
     def get_queryset(self):
-        return self.model.browsable.all()
+        return self.model.objects.all()
 
     def lookup_filter(self, qs, term):
         return qs.filter(Q(title__icontains=term)

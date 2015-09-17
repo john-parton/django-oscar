@@ -225,11 +225,7 @@ class ProductForm(forms.ModelForm):
 
     class Meta:
         model = Product
-        fields = [
-            'title', 'upc', 'description', 'is_discountable', 'structure']
-        widgets = {
-            'structure': forms.HiddenInput()
-        }
+        fields = ['title', 'description', 'is_discountable']
 
     def __init__(self, product_class, data=None, parent=None, *args, **kwargs):
         self.set_initial(product_class, parent, kwargs)

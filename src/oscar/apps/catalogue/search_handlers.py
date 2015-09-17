@@ -99,7 +99,7 @@ class SimpleProductSearchHandler(MultipleObjectMixin):
         self.object_list = self.get_queryset()
 
     def get_queryset(self):
-        qs = Product.browsable.base_queryset()
+        qs = Product.objects.all()
         if self.categories:
             qs = qs.filter(categories__in=self.categories).distinct()
         return qs
