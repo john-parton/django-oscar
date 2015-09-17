@@ -565,8 +565,8 @@ class AbstractLine(models.Model):
         _("Line Reference"), max_length=128, db_index=True)
 
     product = models.ForeignKey(
-        'catalogue.Product', related_name='basket_lines',
-        verbose_name=_("Product"))
+        'catalogue.ChildProduct', related_name='basket_lines',
+        verbose_name=_("Child product"))
 
     # We store the stockrecord that should be used to fulfil this line.
     stockrecord = models.ForeignKey(
