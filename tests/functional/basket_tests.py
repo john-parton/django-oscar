@@ -21,7 +21,9 @@ User = get_user_model()
 class TestBasketMerging(TestCase):
 
     def setUp(self):
-        self.product = create_product(num_in_stock=10)
+        self.product = factories.create_product()
+        self.child = factories.create_child_product(self.product)
+        self.stock = factories.create_stockrecord(self.child, num_in_stock=10)
         self.user_basket = Basket()
         self.user_basket.strategy = strategy.Default()
         add_product(self.user_basket, product=self.product)
