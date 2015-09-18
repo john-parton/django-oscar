@@ -45,44 +45,37 @@ def create_child_product(product=None, upc=None, title=u"Dùｍϻϒ child title"
                    partner_name=None, partner_sku=None, price=None,
                    num_in_stock=None, attributes=None,
                    partner_users=None, **kwargs):
-    child = product.children.model(
-        title=title, upc=upc, **kwargs)
+
+    child = product.children.model(parent=product, title=title, upc=upc, **kwargs)
+    product_class = product.product_class
 
     if attributes:
         for code, value in attributes.items():
             # Ensure product attribute exists
-            product.product_class.attributes.get_or_create(name=code, code=code)
+            product_class.attributes.get_or_create(name=code, code=code)
             setattr(child.attr, code, value)
 
     child.save()
-
-    # Shortcut for creating stockrecord
-    stockrecord_fields = [
-        price, partner_sku, partner_name, num_in_stock, partner_users]
-    if any([field is not None for field in stockrecord_fields]):
-        create_stockrecord(
-            child, price_excl_tax=price, num_in_stock=num_in_stock,
-            partner_users=partner_users, partner_sku=partner_sku,
-            partner_name=partner_name)
     
     return child
 
 
-def create_stockrecord(product=None, price_excl_tax=None, partner_sku=None,
+def create_stockrecord(child=None, price_excl_tax=None, partner_sku=None,
                        num_in_stock=None, partner_name=None,
                        currency=settings.OSCAR_DEFAULT_CURRENCY,
                        partner_users=None):
-    if product is None:
-        product = create_product()
+        
     partner, __ = Partner.objects.get_or_create(name=partner_name or '')
     if partner_users:
         for user in partner_users:
             partner.users.add(user)
     if price_excl_tax is None:
         price_excl_tax = D('9.99')
+
     if partner_sku is None:
-        partner_sku = 'sku_%d_%d' % (product.id, random.randint(0, 10000))
-    return product.stockrecords.create(
+        partner_sku = 'sku_%d_%d' % (child.id, random.randint(0, 10000))
+
+    return child.stockrecords.create(
         partner=partner, partner_sku=partner_sku,
         price_currency=currency,
         price_excl_tax=price_excl_tax, num_in_stock=num_in_stock)
@@ -114,8 +107,6 @@ def create_product(title=u"Dùｍϻϒ title",
         title=title)
     product.save()
 
-    create_child_product(product, **kwargs)
-
     return product
 
 
@@ -145,9 +136,9 @@ def create_basket(empty=False):
     basket = Basket.objects.create()
     basket.strategy = strategy.Default()
     if not empty:
-        product = create_product()
-        child = product.children.all()[0]
-        create_stockrecord(child, num_in_stock=2)
+        parent = create_product()
+        child = create_child_product(parent)
+        stock = create_stockrecord(child, num_in_stock=2)
         basket.add_product(child)
     return basket
 
