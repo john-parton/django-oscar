@@ -131,7 +131,7 @@ class TestShippingAddressView(CheckoutMixin, WebTestCase):
     def test_redirects_customers_with_invalid_basket(self):
         # Add product to basket but then remove its stock so it is not
         # purchasable.
-        product = factories.create_product(num_in_stock=1)
+        __, product, __ = factories.create_product_heirarchy(num_in_stock=1)
         self.add_product_to_basket(product)
         self.enter_guest_details()
 
@@ -165,7 +165,7 @@ class TestShippingMethodView(CheckoutMixin, WebTestCase):
         self.assertRedirectsTo(response, 'basket:summary')
 
     def test_redirects_customers_with_invalid_basket(self):
-        product = factories.create_product(num_in_stock=1)
+        __, product, __ = factories.create_product_heirarchy(num_in_stock=1)
         self.add_product_to_basket(product)
         self.enter_guest_details()
         self.enter_shipping_address()
@@ -270,7 +270,7 @@ class TestPaymentMethodView(CheckoutMixin, WebTestCase):
         self.assertRedirectsTo(response, 'basket:summary')
 
     def test_redirects_customers_with_invalid_basket(self):
-        product = factories.create_product(num_in_stock=1)
+        __, product, __ = factories.create_product_heirarchy(num_in_stock=1)
         self.add_product_to_basket(product)
         self.enter_guest_details()
         self.enter_shipping_address()
@@ -315,7 +315,7 @@ class TestPaymentDetailsView(CheckoutMixin, WebTestCase):
         self.assertRedirectsTo(response, 'basket:summary')
 
     def test_redirects_customers_with_invalid_basket(self):
-        product = factories.create_product(num_in_stock=1)
+        __, product, __ = factories.create_product_heirarchy(num_in_stock=1)
         self.add_product_to_basket(product)
         self.enter_guest_details()
         self.enter_shipping_address()
