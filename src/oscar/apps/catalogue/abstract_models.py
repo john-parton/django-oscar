@@ -396,27 +396,6 @@ class AbstractProduct(models.Model):
         return self.title
     get_title.short_description = pgettext_lazy(u"Product title", u"Title")
 
-    def get_product_class(self):
-        """
-        Return a product's item class. Child products inherit their parent's.
-        """
-        return self.product_class
-    get_product_class.short_description = _("Product class")
-
-    def get_is_discountable(self):
-        """
-        At the moment, is_discountable can't be set individually for child
-        products; they inherit it from their parent.
-        """
-        return self.is_discountable
-
-    def get_categories(self):
-        """
-        Return a product's categories or parent's if there is a parent product.
-        """
-        return self.categories
-    get_categories.short_description = _("Categories")
-
     # Images
 
     def get_missing_image(self):
@@ -562,7 +541,7 @@ class AbstractChildProduct(models.Model):
         self.attr = ProductAttributesContainer(product=self)
 
     def __str__(self):
-        return self.title or self.parent.title
+        return self.get_title()
 
     def get_absolute_url(self):
         """
@@ -622,29 +601,13 @@ class AbstractChildProduct(models.Model):
         """
         Return a product's title or it's parent's title if it has no title
         """
-        return self.title or self.parent.title
+        if self.title:
+            return self.title
+        summary = self.attribute_summary
+        if summary:
+            return summary
+        return self.parent.title
     get_title.short_description = pgettext_lazy(u"Product title", u"Title")
-
-    def get_product_class(self):
-        """
-        Return a product's item class. Child products inherit their parent's.
-        """
-        return self.parent.product_class
-    get_product_class.short_description = _("Product class")
-
-    def get_is_discountable(self):
-        """
-        At the moment, is_discountable can't be set individually for child
-        products; they inherit it from their parent.
-        """
-        return self.parent.is_discountable
-
-    def get_categories(self):
-        """
-        Return a product's categories or parent's if there is a parent product.
-        """
-        return self.parent.categories
-    get_categories.short_description = _("Categories")
 
     # Images
 
@@ -655,80 +618,6 @@ class AbstractChildProduct(models.Model):
         # This class should have a 'name' property so it mimics the Django file
         # field.
         return MissingProductImage()
-
-#     def primary_image(self):
-#         """
-#         Returns the primary image for a product. Usually used when one can
-#         only display one product image, e.g. in a list of products.
-#         """
-#         images = self.images.all()
-#         ordering = self.images.model.Meta.ordering
-#         if not ordering or ordering[0] != 'display_order':
-#             # Only apply order_by() if a custom model doesn't use default
-#             # ordering. Applying order_by() busts the prefetch cache of
-#             # the ProductManager
-#             images = images.order_by('display_order')
-#         try:
-#             return images[0]
-#         except IndexError:
-#             # We return a dict with fields that mirror the key properties of
-#             # the ProductImage class so this missing image can be used
-#             # interchangeably in templates.  Strategy pattern ftw!
-#             return {
-#                 'original': self.get_missing_image(),
-#                 'caption': '',
-#                 'is_missing': True}
-
-#     # Updating methods
-# 
-#     def update_rating(self):
-#         """
-#         Recalculate rating field
-#         """
-#         self.rating = self.calculate_rating()
-#         self.save()
-#     update_rating.alters_data = True
-# 
-#     def calculate_rating(self):
-#         """
-#         Calculate rating value
-#         """
-#         result = self.reviews.filter(
-#             status=self.reviews.model.APPROVED
-#         ).aggregate(
-#             sum=Sum('score'), count=Count('id'))
-#         reviews_sum = result['sum'] or 0
-#         reviews_count = result['count'] or 0
-#         rating = None
-#         if reviews_count > 0:
-#             rating = float(reviews_sum) / reviews_count
-#         return rating
-# 
-#     def has_review_by(self, user):
-#         if user.is_anonymous():
-#             return False
-#         return self.reviews.filter(user=user).exists()
-# 
-#     def is_review_permitted(self, user):
-#         """
-#         Determines whether a user may add a review on this product.
-# 
-#         Default implementation respects OSCAR_ALLOW_ANON_REVIEWS and only
-#         allows leaving one review per user and product.
-# 
-#         Override this if you want to alter the default behaviour; e.g. enforce
-#         that a user purchased the product to be allowed to leave a review.
-#         """
-#         if user.is_authenticated() or settings.OSCAR_ALLOW_ANON_REVIEWS:
-#             return not self.has_review_by(user)
-#         else:
-#             return False
-# 
-#     @cached_property
-#     def num_approved_reviews(self):
-#         return self.reviews.filter(
-#             status=self.reviews.model.APPROVED).count()
-
 
 class AbstractProductRecommendation(models.Model):
     """

@@ -322,7 +322,6 @@ class BaseProductCreateUpdateView(generic.UpdateView):
         return self.get_url_with_querystring(url)
 
 
-
 class ChildProductCreateUpdateView(BaseProductCreateUpdateView):
 
     template_name = 'dashboard/catalogue/child_product_update.html'
@@ -408,64 +407,24 @@ class ProductCreateUpdateView(BaseProductCreateUpdateView):
         else:
             return self.object.title
 
-
-class ProductDeleteView(generic.DeleteView):
+class BaseProductDeleteView(generic.DeleteView):
     """
     Dashboard view to delete a product. Has special logic for deleting the
     last child product.
     Supports the permission-based dashboard.
     """
-    template_name = 'dashboard/catalogue/product_delete.html'
-    model = Product
     context_object_name = 'product'
 
     def get_queryset(self):
         """
         Filter products that the user doesn't have permission to update
         """
-        return filter_products(Product.objects.all(), self.request.user)
-
+        return filter_products(self.model.objects.all(), self.request.user)
+    
     def get_context_data(self, **kwargs):
-        ctx = super(ProductDeleteView, self).get_context_data(**kwargs)
-        if self.object.is_child:
-            ctx['title'] = _("Delete product variant?")
-        else:
-            ctx['title'] = _("Delete product?")
+        ctx = super(BaseProductDeleteView, self).get_context_data(**kwargs)
+        ctx['title'] = self.title
         return ctx
-
-    def delete(self, request, *args, **kwargs):
-        # We override the core delete method and don't call super in order to
-        # apply more sophisticated logic around handling child products.
-        # Calling super makes it difficult to test if the product being deleted
-        # is the last child.
-
-        self.object = self.get_object()
-
-        # Before performing the delete, record whether this product is the last
-        # child.
-        is_last_child = False
-        if self.object.is_child:
-            parent = self.object.parent
-            is_last_child = parent.children.count() == 1
-
-        # This also deletes any child products.
-        self.object.delete()
-
-        # If the product being deleted is the last child, then pass control
-        # to a method than can adjust the parent itself.
-        if is_last_child:
-            self.handle_deleting_last_child(parent)
-
-        return HttpResponseRedirect(self.get_success_url())
-
-    def handle_deleting_last_child(self, parent):
-        # If the last child product is deleted, this view defaults to turning
-        # the parent product into a standalone product. While this is
-        # appropriate for many scenarios, it is intentionally easily
-        # overridable and not automatically done in e.g. a Product's delete()
-        # method as it is more a UX helper than hard business logic.
-        parent.structure = parent.STANDALONE
-        parent.save()
 
     def get_success_url(self):
         """
@@ -473,16 +432,21 @@ class ProductDeleteView(generic.DeleteView):
         parent product. When deleting any other product, it redirects to the
         product list view.
         """
-        if self.object.is_child:
-            msg = _("Deleted product variant '%s'") % self.object.get_title()
-            messages.success(self.request, msg)
-            return reverse(
-                'dashboard:catalogue-product',
-                kwargs={'pk': self.object.parent_id})
-        else:
-            msg = _("Deleted product '%s'") % self.object.title
-            messages.success(self.request, msg)
-            return reverse('dashboard:catalogue-product-list')
+        msg = self.success_message % { 'title': self.object.title }
+        messages.success(self.request, msg)
+        return reverse('dashboard:catalogue-product-list')
+
+class ChildProductDeleteView(BaseProductDeleteView):
+    template_name = 'dashboard/catalogue/child_product_delete.html'
+    model = ChildProduct
+    title = _("Delete variant?")
+    success_message = _("Deleted variant '%(title)s'")
+
+class ProductDeleteView(BaseProductDeleteView):
+    template_name = 'dashboard/catalogue/product_delete.html'
+    model = Product
+    title = _("Delete product?")
+    success_message = _("Deleted product '%(title)s'")
 
 
 class StockAlertListView(generic.ListView):

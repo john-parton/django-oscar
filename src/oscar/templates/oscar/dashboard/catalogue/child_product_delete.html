@@ -44,7 +44,7 @@
             </p>
                 <ul>
                     {% for child in product.children.all %}
-                        <li><strong>{{ child }}</strong></li>
+                        <li><strong>{{ child.get_title }}</strong></li>
                     {% endfor %}
                 </ul>
         {% else %}
