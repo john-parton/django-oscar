@@ -17,7 +17,10 @@
             <a href="{% url 'dashboard:catalogue-product-list' %}">{% trans "Products" %}</a>
         </li>
         <li>
-            <a href="{% url 'dashboard:catalogue-product' pk=product.pk %}">{{ product.get_title }}</a>
+            <a href="{% url 'dashboard:catalogue-product' pk=product.parent.pk %}">{{ product.parent.get_title }}</a>
+        </li>
+        <li>
+            <a href="{% url 'dashboard:catalogue-child-product' pk=product.pk %}">{{ product.get_title }}</a>
         </li>
         <li class="active">{{ title }}</li>
     </ul>
@@ -34,24 +37,9 @@
 
         <p>
             {% blocktrans with title=product.get_title %}
-                Delete product <strong>{{ title }}</strong> - are you sure?
+                Delete variant <strong>{{ title }}</strong> - are you sure?
             {% endblocktrans %}
         </p>
-
-        {% if product.children.all %}
-            <p>
-                {% trans "This will also delete the following child products:" %}
-            </p>
-                <ul>
-                    {% for child in product.children.all %}
-                        <li><strong>{{ child.get_title }}</strong></li>
-                    {% endfor %}
-                </ul>
-        {% else %}
-	        <p>
-	            {% trans "This product has no children." %}
-	        </p>
-        {% endif %}
 
         <div class="form-actions">
             <button type="submit" class="btn btn-danger" data-loading-text="{% trans 'Deleting...' %}">{% trans "Delete" %}</button>
