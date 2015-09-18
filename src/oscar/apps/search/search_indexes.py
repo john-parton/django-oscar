@@ -14,7 +14,7 @@ class ProductIndex(indexes.SearchIndex, indexes.Indexable):
         document=True, use_template=True,
         template_name='oscar/search/indexes/product/item_text.txt')
 
-    upc = indexes.CharField(model_attr="upc", null=True)
+#     upc = indexes.CharField(model_attr="upc", null=True)
     title = indexes.EdgeNgramField(model_attr='title', null=True)
 
     # Fields for faceting
@@ -35,13 +35,13 @@ class ProductIndex(indexes.SearchIndex, indexes.Indexable):
 
     def index_queryset(self, using=None):
         # Only index browsable products (not each individual child product)
-        return self.get_model().browsable.order_by('-date_updated')
+        return self.get_model().objects.all().order_by('-date_updated')
 
     def read_queryset(self, using=None):
-        return self.get_model().browsable.base_queryset()
+        return self.get_model().objects.all()
 
     def prepare_product_class(self, obj):
-        return obj.get_product_class().name
+        return obj.product_class.name
 
     def prepare_category(self, obj):
         categories = obj.categories.all()
@@ -57,11 +57,10 @@ class ProductIndex(indexes.SearchIndex, indexes.Indexable):
     # and so we implement that case here.
 
     def prepare_price(self, obj):
-        result = None
-        if obj.is_parent:
-            result = strategy.fetch_for_parent(obj)
-        elif obj.has_stockrecords:
-            result = strategy.fetch_for_product(obj)
+        
+        child = obj.children.all()[0]
+        
+        result = strategy.fetch_for_product(child)
 
         if result:
             if result.price.is_tax_known:
@@ -69,12 +68,8 @@ class ProductIndex(indexes.SearchIndex, indexes.Indexable):
             return result.price.excl_tax
 
     def prepare_num_in_stock(self, obj):
-        if obj.is_parent:
-            # Don't return a stock level for parent products
-            return None
-        elif obj.has_stockrecords:
-            result = strategy.fetch_for_product(obj)
-            return result.stockrecord.net_stock_level
+        # Not implemented because all of that data is on the child
+        return None
 
     def prepare(self, obj):
         prepared_data = super(ProductIndex, self).prepare(obj)
