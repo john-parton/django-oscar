@@ -23,8 +23,8 @@ def basket_form(request, product, quantity_type='single'):
         quantity_type = QNT_SINGLE
 
     initial = {}
-    if not product.is_parent:
-        initial['product_id'] = product.id
+#     if not product.is_parent:
+#         initial['product_id'] = product.id
 
     form_class = AddToBasketForm
     if quantity_type == QNT_SINGLE:

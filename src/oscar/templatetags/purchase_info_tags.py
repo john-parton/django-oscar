@@ -6,10 +6,7 @@ register = template.Library()
 
 @register.assignment_tag
 def purchase_info_for_product(request, product):
-    if product.is_parent:
-        return request.strategy.fetch_for_parent(product)
-
-    return request.strategy.fetch_for_product(product)
+    return request.strategy.fetch_for_parent(product)
 
 
 @register.assignment_tag

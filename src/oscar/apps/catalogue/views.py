@@ -28,9 +28,6 @@ class ProductDetailView(DetailView):
     # Whether to redirect to the URL with the right path
     enforce_paths = True
 
-    # Whether to redirect child products to their parent's URL
-    enforce_parent = True
-
     def get(self, request, **kwargs):
         """
         Ensures that the correct URL is used before rendering a response
@@ -53,10 +50,6 @@ class ProductDetailView(DetailView):
             return super(ProductDetailView, self).get_object(queryset)
 
     def redirect_if_necessary(self, current_path, product):
-        if self.enforce_parent and product.is_child:
-            return HttpResponsePermanentRedirect(
-                product.parent.get_absolute_url())
-
         if self.enforce_paths:
             expected_path = product.get_absolute_url()
             if expected_path != urlquote(current_path):
