@@ -213,7 +213,7 @@ class StockRequired(object):
     def parent_availability_policy(self, product, children_stock):
         # A parent product is available if one of its children is
         for child, stockrecord in children_stock:
-            policy = self.availability_policy(product, stockrecord)
+            policy = self.availability_policy(child, stockrecord)
             if policy.is_available_to_buy:
                 return availability.Available()
         return availability.Unavailable()

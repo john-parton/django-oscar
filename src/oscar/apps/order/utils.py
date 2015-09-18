@@ -186,7 +186,7 @@ class OrderCreator(object):
         """
         Update any relevant stock records for this order line
         """
-        if line.product.get_product_class().track_stock:
+        if line.product.parent.product_class.track_stock:
             line.stockrecord.allocate(line.quantity)
 
     def create_additional_line_models(self, order, order_line, basket_line):

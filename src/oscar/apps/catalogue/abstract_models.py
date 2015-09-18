@@ -641,7 +641,7 @@ class ProductAttributesContainer(object):
             return getattr(self, name)
         raise AttributeError(
             _("%(obj)s has no attribute named '%(attr)s'") % {
-                'obj': self.product.get_product_class(), 'attr': name})
+                'obj': self.product.parent.product_class, 'attr': name})
 
     def validate_attributes(self):
         for attribute in self.get_all_attributes():
