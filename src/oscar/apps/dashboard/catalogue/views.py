@@ -425,16 +425,10 @@ class BaseProductDeleteView(generic.DeleteView):
         ctx = super(BaseProductDeleteView, self).get_context_data(**kwargs)
         ctx['title'] = self.title
         return ctx
-
-    def get_success_url(self):
-        """
-        When deleting child products, this view redirects to editing the
-        parent product. When deleting any other product, it redirects to the
-        product list view.
-        """
-        msg = self.success_message % { 'title': self.object.title }
+    
+    def post_success_message(self):
+        msg = self.success_message % { 'title': self.object.get_title() }
         messages.success(self.request, msg)
-        return reverse('dashboard:catalogue-product-list')
 
 class ChildProductDeleteView(BaseProductDeleteView):
     template_name = 'dashboard/catalogue/child_product_delete.html'
@@ -442,11 +436,29 @@ class ChildProductDeleteView(BaseProductDeleteView):
     title = _("Delete variant?")
     success_message = _("Deleted variant '%(title)s'")
 
+    def get_success_url(self):
+        """
+        When deleting child products, this view redirects to editing the
+        parent product. When deleting any other product, it redirects to the
+        product list view.
+        """
+        self.post_success_message()
+        return reverse('dashboard:catalogue-product', kwargs={'pk': self.object.parent.pk})
+
 class ProductDeleteView(BaseProductDeleteView):
     template_name = 'dashboard/catalogue/product_delete.html'
     model = Product
     title = _("Delete product?")
     success_message = _("Deleted product '%(title)s'")
+
+    def get_success_url(self):
+        """
+        When deleting child products, this view redirects to editing the
+        parent product. When deleting any other product, it redirects to the
+        product list view.
+        """
+        self.post_success_message()
+        return reverse('dashboard:catalogue-product-list')
 
 
 class StockAlertListView(generic.ListView):

@@ -3,6 +3,7 @@ from django.utils.six.moves import http_client
 
 from oscar.core.loading import get_model
 from oscar.test.testcases import WebTestCase, add_permissions
+from oscar.test import factories
 from oscar.test.factories import create_product
 from oscar.test.factories import (
     CategoryFactory, PartnerFactory, ProductFactory, ProductAttributeFactory)
@@ -129,18 +130,17 @@ class TestAStaffUser(WebTestCase):
         self.assertEqual(Product.objects.count(), 0)
 
     def test_can_delete_a_child_product(self):
-        parent_product = create_product(structure='parent')
-        child_product = create_product(parent=parent_product)
+        parent_product, child_product, __ = factories.create_product_heirarchy()
 
         url = reverse(
-            'dashboard:catalogue-product-delete',
+            'dashboard:catalogue-child-product-delete',
             args=(child_product.id,))
         page = self.get(url).form.submit()
 
         expected_url = reverse(
             'dashboard:catalogue-product', kwargs={'pk': parent_product.pk})
         self.assertRedirects(page, expected_url)
-        self.assertEqual(Product.objects.count(), 1)
+        self.assertEqual(ChildProduct.objects.count(), 0)
 
     def test_can_list_her_products(self):
         product1 = create_product(partner_users=[self.user, ])
