@@ -17,6 +17,11 @@ def basket_form(request, product, quantity_type='single'):
     if not isinstance(product, Product):
         return ''
 
+    if len(product.children.all()) > 1:
+        quantity_type = QNT_MULTIPLE
+    else:
+        quantity_type = QNT_SINGLE
+
     initial = {}
     if not product.is_parent:
         initial['product_id'] = product.id

@@ -144,7 +144,7 @@ class AddToBasketForm(forms.Form):
         super(AddToBasketForm, self).__init__(*args, **kwargs)
 
         # Dynamically build fields
-        if product.is_parent:
+        if len(product.children.all()) > 1:
             self._create_parent_product_fields(product)
         self._create_product_fields(product)
 

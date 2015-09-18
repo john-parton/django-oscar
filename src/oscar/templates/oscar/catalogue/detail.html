@@ -100,11 +100,6 @@
         <h2>{% trans "Product Information" %}</h2>
     </div>
     <table class="table table-striped">
-        {% if product.upc %}
-        <tr>
-            <th>{% trans "UPC" %}</th><td>{{ product.upc }}</td>
-        </tr>
-        {% endif %}
         <tr>
             <th>{% trans "Product Type" %}</th><td>{{ product.get_product_class.name }}</td>
         </tr>
@@ -127,12 +122,6 @@
                 <td>{{ session.availability.message }}</td>
             </tr>
         {% endif %}
-        {% for av in product.attribute_values.all %}
-            <tr>
-                <th>{{ av.attribute.name }}</th>
-                <td>{{ av.value_as_html }}</td>
-            </tr>
-        {% endfor %}
         {% iffeature "reviews" %}
             <tr>
                 <th>{% trans "Number of reviews" %}</th>

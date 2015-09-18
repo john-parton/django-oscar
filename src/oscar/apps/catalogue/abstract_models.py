@@ -326,37 +326,6 @@ class AbstractProduct(models.Model):
             self.slug = slugify(self.get_title())
         super(AbstractProduct, self).save(*args, **kwargs)
 
-    # Properties
-
-    @property
-    def is_standalone(self):
-        return False
-
-    @property
-    def is_parent(self):
-        return True
-
-    @property
-    def is_child(self):
-        return False
-
-    def can_be_parent(self, give_reason=False):
-        """
-        Helps decide if a the product can be turned into a parent product.
-        """
-        reason = None
-        if self.is_child:
-            reason = _('The specified parent product is a child product.')
-        if self.has_stockrecords:
-            reason = _(
-                "One can't add a child product to a product with stock"
-                " records.")
-        is_valid = reason is None
-        if give_reason:
-            return is_valid, reason
-        else:
-            return is_valid
-
     @property
     def options(self):
         """
@@ -612,26 +581,6 @@ class AbstractChildProduct(models.Model):
             self.slug = slugify(self.get_title())
         super(AbstractChildProduct, self).save(*args, **kwargs)
         self.attr.save()
-
-    # Properties
-
-    @property
-    def is_standalone(self):
-        return False
-
-    @property
-    def is_parent(self):
-        return False
-
-    @property
-    def is_child(self):
-        return True
-
-    def can_be_parent(self, give_reason=False):
-        """
-        Helps decide if a the product can be turned into a parent product.
-        """
-        return False, None
 
     @property
     def options(self):
