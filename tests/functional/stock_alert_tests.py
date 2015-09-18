@@ -12,9 +12,7 @@ from tests._site.apps.partner.models import StockRecord
 class TestPlacingAnOrder(TestCase):
 
     def setUp(self):
-        self.product = factories.create_product()
-        self.stockrecord = factories.create_stockrecord(
-            self.product, D('12.00'), num_in_stock=5)
+        __, self.product, self.stockrecord = factories.create_product_heirarchy(price_excl_tax=D('12.00'), num_in_stock=5)
         self.basket = factories.create_basket(empty=True)
         add_product(self.basket, product=self.product)
 

@@ -112,7 +112,7 @@ def create_product(title=u"Dùｍϻϒ title",
 def create_product_heirarchy(title=u"Dùｍϻϒ title",
                              product_class=u"Dùｍϻϒ item class",
                              **kwargs):
-    parent = create_product()
+    parent = create_product(title=title, product_class=product_class)
     child = create_child_product(parent)
     stock = create_stockrecord(child, **kwargs)
     return parent, child, stock

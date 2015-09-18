@@ -15,9 +15,9 @@ class CheckoutMixin(object):
     def create_digital_product(self):
         product_class = factories.ProductClassFactory(
             requires_shipping=False, track_stock=False)
-        product = factories.ProductFactory(product_class=product_class)
-        factories.StockRecordFactory(
-            num_in_stock=None, price_excl_tax=D('12.00'), product=product)
+        __, product, __ = factories.create_product_heirarchy(product_class=product_class.name,
+                                                             num_in_stock=None,
+                                                             price_excl_tax=D('12.00'))
         return product
 
     def add_product_to_basket(self, product=None):
