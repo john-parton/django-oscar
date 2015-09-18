@@ -41,6 +41,31 @@ WeightBand = get_model('shipping', 'WeightBand')
 WeightBased = get_model('shipping', 'WeightBased')
 
 
+def create_child_product(product=None, upc=None, title=u"Dùｍϻϒ child title",
+                   partner_name=None, partner_sku=None, price=None,
+                   num_in_stock=None, attributes=None,
+                   partner_users=None, **kwargs):
+    child = product.children.model(
+        title=title, upc=upc, **kwargs)
+
+    if attributes:
+        for code, value in attributes.items():
+            # Ensure product attribute exists
+            product.product_class.attributes.get_or_create(name=code, code=code)
+            setattr(child.attr, code, value)
+
+    # Shortcut for creating stockrecord
+    stockrecord_fields = [
+        price, partner_sku, partner_name, num_in_stock, partner_users]
+    if any([field is not None for field in stockrecord_fields]):
+        create_stockrecord(
+            child, price_excl_tax=price, num_in_stock=num_in_stock,
+            partner_users=partner_users, partner_sku=partner_sku,
+            partner_name=partner_name)
+    
+    return child
+
+
 def create_stockrecord(product=None, price_excl_tax=None, partner_sku=None,
                        num_in_stock=None, partner_name=None,
                        currency=settings.OSCAR_DEFAULT_CURRENCY,
@@ -74,11 +99,9 @@ def create_purchase_info(record):
     )
 
 
-def create_product(upc=None, title=u"Dùｍϻϒ title",
+def create_product(title=u"Dùｍϻϒ title",
                    product_class=u"Dùｍϻϒ item class",
-                   partner_name=None, partner_sku=None, price=None,
-                   num_in_stock=None, attributes=None,
-                   partner_users=None, **kwargs):
+                   **kwargs):
     """
     Helper method for creating products that are used in tests.
     """
@@ -86,24 +109,11 @@ def create_product(upc=None, title=u"Dùｍϻϒ title",
         name=product_class)
     product = product_class.products.model(
         product_class=product_class,
-        title=title, upc=upc, **kwargs)
-    if kwargs.get('parent') and 'structure' not in kwargs:
-        product.structure = 'child'
-    if attributes:
-        for code, value in attributes.items():
-            # Ensure product attribute exists
-            product_class.attributes.get_or_create(name=code, code=code)
-            setattr(product.attr, code, value)
+        title=title)
     product.save()
 
-    # Shortcut for creating stockrecord
-    stockrecord_fields = [
-        price, partner_sku, partner_name, num_in_stock, partner_users]
-    if any([field is not None for field in stockrecord_fields]):
-        create_stockrecord(
-            product, price_excl_tax=price, num_in_stock=num_in_stock,
-            partner_users=partner_users, partner_sku=partner_sku,
-            partner_name=partner_name)
+    create_child_product(product, **kwargs)
+
     return product
 
 
