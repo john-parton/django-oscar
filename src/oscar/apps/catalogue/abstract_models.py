@@ -241,15 +241,7 @@ class AbstractProductCategory(models.Model):
 @python_2_unicode_compatible
 class AbstractProduct(models.Model):
     """
-    The base product object
-
-    There's three kinds of products; they're distinguished by the structure
-    field.
-
-    - A stand alone product. Regular product that lives by itself.
-    - A child product. All child products have a parent product. They're a
-      specific version of the parent.
-    - A parent product. It essentially represents a set of products.
+    A parent product. It essentially represents a set of products.
 
     An example could be a yoga course, which is a parent product. The different
     times/locations of the courses would be associated with the child products.
@@ -482,18 +474,9 @@ class AbstractProduct(models.Model):
 @python_2_unicode_compatible
 class AbstractChildProduct(models.Model):
     """
-    The base product object
-
-    There's three kinds of products; they're distinguished by the structure
-    field.
-
-    - A stand alone product. Regular product that lives by itself.
-    - A child product. All child products have a parent product. They're a
-      specific version of the parent.
-    - A parent product. It essentially represents a set of products.
-
-    An example could be a yoga course, which is a parent product. The different
-    times/locations of the courses would be associated with the child products.
+    The child product object
+    
+    All child products have a parent product. They're a specific version of the parent.
     """
     upc = NullCharField(
         _("UPC"), max_length=64, blank=True, null=True, unique=True,
@@ -608,16 +591,6 @@ class AbstractChildProduct(models.Model):
             return summary
         return self.parent.title
     get_title.short_description = pgettext_lazy(u"Product title", u"Title")
-
-    # Images
-
-    def get_missing_image(self):
-        """
-        Returns a missing image object.
-        """
-        # This class should have a 'name' property so it mimics the Django file
-        # field.
-        return MissingProductImage()
 
 class AbstractProductRecommendation(models.Model):
     """
