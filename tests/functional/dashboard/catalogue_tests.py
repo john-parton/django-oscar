@@ -84,12 +84,16 @@ class TestAStaffUser(WebTestCase):
             if product.has_stockrecords:
                 self.fail('Product has stock records but should not')
 
-    def test_can_create_product_with_required_attributes(self):
+    def test_can_create_child_product_with_required_attributes(self):
         category = CategoryFactory()
         attribute = ProductAttributeFactory(required=True)
         product_class = attribute.product_class
-        page = self.get(reverse('dashboard:catalogue-product-create',
-                                args=(product_class.slug,)))
+        parent_product = ProductFactory(product_class=product_class)
+        url = reverse(
+            'dashboard:catalogue-product-create-child',
+            kwargs={'parent_pk': parent_product.pk})
+        page = self.get(url)
+
         form = page.form
         form['upc'] = '123456'
         form['title'] = 'new product'
@@ -97,7 +101,7 @@ class TestAStaffUser(WebTestCase):
         form['productcategory_set-0-category'] = category.id
         form.submit()
 
-        self.assertEqual(Product.objects.count(), 1)
+        self.assertEqual(ChildProduct.objects.count(), 1)
 
     def test_can_delete_a_standalone_product(self):
         product = create_product(partner_users=[self.user])
