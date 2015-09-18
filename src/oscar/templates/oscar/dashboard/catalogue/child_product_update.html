@@ -20,8 +20,8 @@
             <a href="{% url 'dashboard:catalogue-product-list' %}">{% trans "Products" %}</a>
         </li>
         <li>
-            <a href="{% url 'dashboard:catalogue-product' product.parent.id %}">
-                {{ product.parent.title }}
+            <a href="{% url 'dashboard:catalogue-product' parent.id %}">
+                {{ parent.title }}
             </a>
         </li>
         <li class="active">{{ title }}</li>
@@ -38,7 +38,7 @@
             <div class="col-md-12">
                 <div class="alert alert-info">
                     {% url 'dashboard:catalogue-product' pk=parent.id as parent_url %}
-                    {% blocktrans with title=product.parent.title %}
+                    {% blocktrans with title=parent.title %}
                         You are currently editing a product variant of
                         <a href="{{ parent_url }}">{{ title }}</a>.
                     {% endblocktrans %}

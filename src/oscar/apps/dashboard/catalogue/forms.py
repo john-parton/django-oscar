@@ -227,23 +227,20 @@ class ChildProductForm(forms.ModelForm):
     class Meta:
         model = ChildProduct
         fields = ['title', 'description', 'upc']
+        widgets = {
+            'title': forms.TextInput(attrs={'autocomplete': 'off'})
+        }
 
-    def __init__(self, product_class, data=None, parent=None, *args, **kwargs):
-        self.set_initial(product_class, parent, kwargs)
-        super(ChildProductForm, self).__init__(data, *args, **kwargs)
-        if parent:
-            self.instance.parent = parent
-            self.delete_non_child_fields()
-        else:
-            # Only set product class for non-child products
-            self.instance.product_class = product_class
-        self.add_attribute_fields(product_class, self.instance.is_parent)
+    def __init__(self, *args, **kwargs):
+        self.product_class = kwargs.pop('product_class')
+        self.parent = kwargs.pop('parent')
+        self.set_initial(kwargs)
+        super(ChildProductForm, self).__init__(*args, **kwargs)
+        self.instance.parent = self.parent
+        self.delete_non_child_fields()
+        self.add_attribute_fields()
 
-        if 'title' in self.fields:
-            self.fields['title'].widget = forms.TextInput(
-                attrs={'autocomplete': 'off'})
-
-    def set_initial(self, product_class, parent, kwargs):
+    def set_initial(self, kwargs):
         """
         Set initial data for the form. Sets the correct product structure
         and fetches initial values for the dynamically constructed attribute
@@ -251,11 +248,9 @@ class ChildProductForm(forms.ModelForm):
         """
         if 'initial' not in kwargs:
             kwargs['initial'] = {}
-        self.set_initial_attribute_values(product_class, kwargs)
-        if parent:
-            kwargs['initial']['structure'] = Product.CHILD
+        self.set_initial_attribute_values(kwargs)
 
-    def set_initial_attribute_values(self, product_class, kwargs):
+    def set_initial_attribute_values(self, kwargs):
         """
         Update the kwargs['initial'] value to have the initial values based on
         the product instance's attributes
@@ -263,7 +258,7 @@ class ChildProductForm(forms.ModelForm):
         instance = kwargs.get('instance')
         if instance is None:
             return
-        for attribute in product_class.attributes.all():
+        for attribute in self.product_class.attributes.all():
             try:
                 value = instance.attribute_values.get(
                     attribute=attribute).value
@@ -272,18 +267,18 @@ class ChildProductForm(forms.ModelForm):
             else:
                 kwargs['initial']['attr_%s' % attribute.code] = value
 
-    def add_attribute_fields(self, product_class, is_parent=False):
+    def add_attribute_fields(self):
         """
         For each attribute specified by the product class, this method
         dynamically adds form fields to the product form.
         """
-        for attribute in product_class.attributes.all():
+        for attribute in self.product_class.attributes.all():
             field = self.get_attribute_field(attribute)
             if field:
                 self.fields['attr_%s' % attribute.code] = field
                 # Attributes are not required for a parent product
-                if is_parent:
-                    self.fields['attr_%s' % attribute.code].required = False
+#                 if is_parent:
+#                     self.fields['attr_%s' % attribute.code].required = False
 
     def get_attribute_field(self, attribute):
         """
@@ -296,7 +291,7 @@ class ChildProductForm(forms.ModelForm):
         Deletes any fields not needed for child products. Override this if
         you want to e.g. keep the description field.
         """
-        for field_name in ['description', 'is_discountable']:
+        for field_name in ['description']:
             if field_name in self.fields:
                 del self.fields[field_name]
 
@@ -305,8 +300,7 @@ class ChildProductForm(forms.ModelForm):
         Set attributes before ModelForm calls the product's clean method
         (which it does in _post_clean), which in turn validates attributes.
         """
-        product_class = self.instance.get_product_class()
-        for attribute in product_class.attributes.all():
+        for attribute in self.product_class.attributes.all():
             field_name = 'attr_%s' % attribute.code
             # An empty text field won't show up in cleaned_data.
             if field_name in self.cleaned_data:
@@ -319,74 +313,14 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = ['title', 'description', 'is_discountable']
+        widgets = {
+            'title': forms.TextInput(attrs={'autocomplete': 'off'})
+        }
 
-    def __init__(self, product_class, data=None, *args, **kwargs):
-        super(ProductForm, self).__init__(data, *args, **kwargs)
-        self.instance.product_class = product_class
-#         self.add_attribute_fields(product_class, self.instance.is_parent)
-
-        if 'title' in self.fields:
-            self.fields['title'].widget = forms.TextInput(
-                attrs={'autocomplete': 'off'})
-
-    def set_initial_attribute_values(self, product_class, kwargs):
-        """
-        Update the kwargs['initial'] value to have the initial values based on
-        the product instance's attributes
-        """
-        instance = kwargs.get('instance')
-        if instance is None:
-            return
-        for attribute in product_class.attributes.all():
-            try:
-                value = instance.attribute_values.get(
-                    attribute=attribute).value
-            except exceptions.ObjectDoesNotExist:
-                pass
-            else:
-                kwargs['initial']['attr_%s' % attribute.code] = value
-
-    def add_attribute_fields(self, product_class, is_parent=False):
-        """
-        For each attribute specified by the product class, this method
-        dynamically adds form fields to the product form.
-        """
-        for attribute in product_class.attributes.all():
-            field = self.get_attribute_field(attribute)
-            if field:
-                self.fields['attr_%s' % attribute.code] = field
-                # Attributes are not required for a parent product
-                if is_parent:
-                    self.fields['attr_%s' % attribute.code].required = False
-
-    def get_attribute_field(self, attribute):
-        """
-        Gets the correct form field for a given attribute type.
-        """
-        return self.FIELD_FACTORIES[attribute.type](attribute)
-
-    def delete_non_child_fields(self):
-        """
-        Deletes any fields not needed for child products. Override this if
-        you want to e.g. keep the description field.
-        """
-        for field_name in ['description', 'is_discountable']:
-            if field_name in self.fields:
-                del self.fields[field_name]
-
-    def _post_clean(self):
-        """
-        Set attributes before ModelForm calls the product's clean method
-        (which it does in _post_clean), which in turn validates attributes.
-        """
-        product_class = self.instance.get_product_class()
-        for attribute in product_class.attributes.all():
-            field_name = 'attr_%s' % attribute.code
-            # An empty text field won't show up in cleaned_data.
-            if field_name in self.cleaned_data:
-                value = self.cleaned_data[field_name]
-                setattr(self.instance.attr, attribute.code, value)
-        super(ChildProductForm, self)._post_clean()
+    def __init__(self, *args, **kwargs):
+        self.product_class = kwargs.pop('product_class')
+        super(ProductForm, self).__init__(*args, **kwargs)
+        self.instance.product_class = self.product_class
 
 class StockAlertSearchForm(forms.Form):
     status = forms.CharField(label=_('Status'))
