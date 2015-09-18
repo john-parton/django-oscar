@@ -4,8 +4,8 @@
 
 <div id="reviews" class="review-title">
     <h3>{% trans "Customer Reviews" %}</h3>
-    {% if product|is_review_permitted:user %}
-        <a id="write_review" href="{% url 'catalogue:reviews-add' product_slug=product.slug product_pk=product.id %}#addreview" class="btn">{% trans "Add a review" %}</a>
+    {% if product.parent|is_review_permitted:user %}
+        <a id="write_review" href="{% url 'catalogue:reviews-add' product_slug=product.parent.slug product_pk=product.parent.id %}#addreview" class="btn">{% trans "Add a review" %}</a>
     {% endif %}
     <p class="star-rating {{ product.rating|as_stars }}">
         <i class="icon-star"></i>

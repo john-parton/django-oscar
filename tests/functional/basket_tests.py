@@ -13,6 +13,7 @@ from oscar.apps.basket import reports
 from oscar.test.basket import add_product
 from oscar.test import factories
 from oscar.apps.partner import strategy
+from oscar.test.factories import create_product_heirarchy
 
 
 User = get_user_model()
@@ -21,7 +22,7 @@ User = get_user_model()
 class TestBasketMerging(TestCase):
 
     def setUp(self):
-        self.parent, self.product, self.stock = factories.create_product_heirarchy(num_in_stock=10)
+        __, self.product, __ = factories.create_product_heirarchy(num_in_stock=10)
         self.user_basket = Basket()
         self.user_basket.strategy = strategy.Default()
         add_product(self.user_basket, product=self.product)
@@ -44,10 +45,9 @@ class TestBasketMerging(TestCase):
 class AnonAddToBasketViewTests(TestCase):
 
     def setUp(self):
-        self.product = create_product(
-            price=D('10.00'), num_in_stock=10)
-        url = reverse('basket:add', kwargs={'pk': self.product.pk})
-        post_params = {'product_id': self.product.id,
+        self.parent, self.product, __ = factories.create_product_heirarchy(price_excl_tax=D('10.00'), num_in_stock=10)
+        url = reverse('basket:add', kwargs={'pk': self.parent.pk})
+        post_params = {'child': self.product.id,
                        'action': 'add',
                        'quantity': 1}
         self.client = Client()
@@ -97,14 +97,14 @@ class BasketThresholdTest(TestCase):
         settings.OSCAR_MAX_BASKET_QUANTITY_THRESHOLD = self._old_threshold
 
     def test_adding_more_than_threshold_raises(self):
-        dummy_product = create_product(price=D('10.00'), num_in_stock=10)
-        url = reverse('basket:add', kwargs={'pk': dummy_product.pk})
-        post_params = {'product_id': dummy_product.id,
+        parent, product, __ = factories.create_product_heirarchy(price_excl_tax=D('10.00'), num_in_stock=10)
+        url = reverse('basket:add', kwargs={'pk': parent.pk})
+        post_params = {'child': product.id,
                        'action': 'add',
                        'quantity': 2}
         response = self.client.post(url, post_params)
         self.assertTrue('oscar_open_basket' in response.cookies)
-        post_params = {'product_id': dummy_product.id,
+        post_params = {'child': product.id,
                        'action': 'add',
                        'quantity': 2}
         response = self.client.post(url, post_params)
@@ -141,7 +141,7 @@ class SavedBasketTests(TestCase):
         client = Client()
         client.login(email=user.email, password='pass')
 
-        product = create_product(price=D('10.00'), num_in_stock=2)
+        __, product, __ = create_product_heirarchy(price_excl_tax=D('10.00'), num_in_stock=2)
         basket = factories.create_basket(empty=True)
         basket.owner = user
         basket.save()
@@ -173,7 +173,7 @@ class SavedBasketTests(TestCase):
         client = Client()
         client.login(email=user.email, password='pass')
 
-        product = create_product(price=D('10.00'), num_in_stock=1)
+        __, product, __ = create_product_heirarchy(price_excl_tax=D('10.00'), num_in_stock=1)
         basket, created = Basket.open.get_or_create(owner=user)
         add_product(basket, product=product)
 

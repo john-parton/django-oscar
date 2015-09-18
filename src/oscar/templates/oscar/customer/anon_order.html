@@ -75,8 +75,8 @@
                 <td>{{ line.line_price_before_discounts_incl_tax|currency:order.currency }}</td>
                 {% iffeature "reviews" %}
                     <td>
-                        {% if line.product|is_review_permitted:user %}
-                            <a href="{% url 'catalogue:reviews-add' product_slug=line.product.slug product_pk=line.product.id %}" class="btn btn-primary">{% trans 'Write a review' %}</a>
+                        {% if line.product.parent|is_review_permitted:user %}
+                            <a href="{% url 'catalogue:reviews-add' product_slug=line.product.parent.slug product_pk=line.product.parent.id %}" class="btn btn-primary">{% trans 'Write a review' %}</a>
                         {% endif %}
                     </td>
                 {% endiffeature %}
