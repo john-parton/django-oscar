@@ -9,6 +9,7 @@ from oscar.forms import widgets
 
 Line = get_model('basket', 'line')
 Basket = get_model('basket', 'basket')
+ChildProduct = get_model('catalogue', 'ChildProduct')
 Product = get_model('catalogue', 'product')
 
 
@@ -132,6 +133,7 @@ class BasketVoucherForm(forms.Form):
 
 class AddToBasketForm(forms.Form):
     quantity = forms.IntegerField(initial=1, min_value=1, label=_('Quantity'))
+    child = forms.ModelChoiceField(queryset=ChildProduct.objects.none(), widget=forms.HiddenInput())
 
     def __init__(self, basket, product, *args, **kwargs):
         # Note, the product passed in here isn't necessarily the product being
@@ -143,41 +145,32 @@ class AddToBasketForm(forms.Form):
 
         super(AddToBasketForm, self).__init__(*args, **kwargs)
 
-        # Dynamically build fields
-        if len(product.children.all()) > 1:
-            self._create_parent_product_fields(product)
+        self.set_child_queryset(product)
         self._create_product_fields(product)
 
     # Dynamic form building methods
 
-    def _create_parent_product_fields(self, product):
+    def set_child_queryset(self, product):
         """
         Adds the fields for a "group"-type product (eg, a parent product with a
         list of children.
 
         Currently requires that a stock record exists for the children
         """
-        choices = []
         disabled_values = []
         for child in product.children.all():
-            # Build a description of the child, including any pertinent
-            # attributes
-            attr_summary = child.attribute_summary
-            if attr_summary:
-                summary = attr_summary
-            else:
-                summary = child.get_title()
 
             # Check if it is available to buy
             info = self.basket.strategy.fetch_for_product(child)
             if not info.availability.is_available_to_buy:
                 disabled_values.append(child.id)
-
-            choices.append((child.id, summary))
-
-        self.fields['child_id'] = forms.ChoiceField(
-            choices=tuple(choices), label=_("Variant"),
-            widget=widgets.AdvancedSelect(disabled_values=disabled_values))
+        
+        if len(product.children.all()) > 1:
+            self.fields['child'].widget = widgets.AdvancedSelect(disabled_values=disabled_values)
+        else:
+            self.fields['child'].initial = product.children.all()[0]
+        
+        self.fields['child'].queryset = product.children.all()
 
     def _create_product_fields(self, product):
         """
@@ -195,22 +188,6 @@ class AddToBasketForm(forms.Form):
         """
         kwargs = {'required': option.is_required}
         self.fields[option.code] = forms.CharField(**kwargs)
-
-    # Cleaning
-
-    def clean_child_id(self):
-        try:
-            child = self.parent_product.children.get(
-                id=self.cleaned_data['child_id'])
-        except Product.DoesNotExist:
-            raise forms.ValidationError(
-                _("Please select a valid product"))
-
-        # To avoid duplicate SQL queries, we cache a copy of the loaded child
-        # product as we're going to need it later.
-        self.child_product = child
-
-        return self.cleaned_data['child_id']
 
     def clean_quantity(self):
         # Check that the proposed new line quantity is sensible
@@ -235,26 +212,27 @@ class AddToBasketForm(forms.Form):
         """
         # Note, the child product attribute is saved in the clean_child_id
         # method
-        return getattr(self, 'child_product', self.parent_product)
+        return self.cleaned_data.get('child', None)
 
     def clean(self):
-        info = self.basket.strategy.fetch_for_product(self.product)
-
-        # Check currencies are sensible
-        if (self.basket.currency and
-                info.price.currency != self.basket.currency):
-            raise forms.ValidationError(
-                _("This product cannot be added to the basket as its currency "
-                  "isn't the same as other products in your basket"))
-
-        # Check user has permission to add the desired quantity to their
-        # basket.
-        current_qty = self.basket.product_quantity(self.product)
-        desired_qty = current_qty + self.cleaned_data.get('quantity', 1)
-        is_permitted, reason = info.availability.is_purchase_permitted(
-            desired_qty)
-        if not is_permitted:
-            raise forms.ValidationError(reason)
+        if self.product:
+            info = self.basket.strategy.fetch_for_product(self.product)
+    
+            # Check currencies are sensible
+            if (self.basket.currency and
+                    info.price.currency != self.basket.currency):
+                raise forms.ValidationError(
+                    _("This product cannot be added to the basket as its currency "
+                      "isn't the same as other products in your basket"))
+    
+            # Check user has permission to add the desired quantity to their
+            # basket.
+            current_qty = self.basket.product_quantity(self.product)
+            desired_qty = current_qty + self.cleaned_data.get('quantity', 1)
+            is_permitted, reason = info.availability.is_purchase_permitted(
+                desired_qty)
+            if not is_permitted:
+                raise forms.ValidationError(reason)
 
         return self.cleaned_data
 
