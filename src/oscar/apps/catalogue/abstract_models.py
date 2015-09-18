@@ -500,6 +500,7 @@ class AbstractProduct(models.Model):
         return self.reviews.filter(
             status=self.reviews.model.APPROVED).count()
 
+@python_2_unicode_compatible
 class AbstractChildProduct(models.Model):
     """
     The base product object

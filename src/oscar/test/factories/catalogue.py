@@ -9,6 +9,7 @@ __all__ = [
     'ProductAttributeFactory', 'AttributeOptionGroupFactory',
     'OptionFactory', 'AttributeOptionFactory',
     'ProductAttributeValueFactory', 'ProductReviewFactory',
+    'ChildProductFactory'
 ]
 
 
@@ -25,16 +26,19 @@ class ProductFactory(factory.DjangoModelFactory):
     class Meta:
         model = get_model('catalogue', 'Product')
 
-    structure = Meta.model.STANDALONE
-    upc = factory.Sequence(lambda n: '978080213020%d' % n)
     title = "A confederacy of dunces"
     product_class = factory.SubFactory(ProductClassFactory)
+    categories = factory.RelatedFactory(
+        'oscar.test.factories.ProductCategoryFactory', 'product')
+    children = factory.RelatedFactory(
+        'oscar.test.factories.ChildProductFactory', 'parent')
+
+class ChildProductFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = get_model('catalogue', 'ChildProduct')
 
     stockrecords = factory.RelatedFactory(
         'oscar.test.factories.StockRecordFactory', 'product')
-    categories = factory.RelatedFactory(
-        'oscar.test.factories.ProductCategoryFactory', 'product')
-
 
 class CategoryFactory(factory.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Category %d' % n)
