@@ -157,12 +157,7 @@ def create_order(number=None, basket=None, user=None, shipping_address=None,
     Helper method for creating an order for testing
     """
     if not basket:
-        basket = Basket.objects.create()
-        basket.strategy = strategy.Default()
-        product = create_product()
-        create_stockrecord(
-            product, num_in_stock=10, price_excl_tax=D('10.00'))
-        basket.add_product(product)
+        basket = create_basket()
     if not basket.id:
         basket.save()
     if shipping_method is None:

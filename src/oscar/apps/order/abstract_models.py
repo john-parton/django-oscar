@@ -439,7 +439,7 @@ class AbstractLine(models.Model):
     # We don't want any hard links between orders and the products table so we
     # allow this link to be NULLable.
     product = models.ForeignKey(
-        'catalogue.Product', on_delete=models.SET_NULL, blank=True, null=True,
+        'catalogue.ChildProduct', on_delete=models.SET_NULL, blank=True, null=True,
         verbose_name=_("Product"))
     title = models.CharField(
         pgettext_lazy(u"Product title", u"Title"), max_length=255)
