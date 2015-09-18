@@ -297,7 +297,7 @@ class BaseProductCreateUpdateView(generic.UpdateView):
           to a new product creation page
         """
         msg = render_to_string(
-            'dashboard/catalogue/messages/product_saved.html',
+            self.message_template_name,
             {
                 'product': self.object,
                 'creating': self.creating,
@@ -326,6 +326,7 @@ class BaseProductCreateUpdateView(generic.UpdateView):
 class ChildProductCreateUpdateView(BaseProductCreateUpdateView):
 
     template_name = 'dashboard/catalogue/child_product_update.html'
+    message_template_name = 'dashboard/catalogue/messages/child_product_saved.html'
     model = ChildProduct
 
     form_class = ChildProductForm
@@ -362,10 +363,11 @@ class ChildProductCreateUpdateView(BaseProductCreateUpdateView):
             return _('Create new variant for %(parent)s') % {
                 'parent': self.parent}
         else:
-            return self.object.title
+            return unicode(self.object)
 
 class ProductCreateUpdateView(BaseProductCreateUpdateView):
     template_name = 'dashboard/catalogue/product_update.html'
+    message_template_name = 'dashboard/catalogue/messages/product_saved.html'
     model = Product
 
     form_class = ProductForm

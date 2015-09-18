@@ -3,42 +3,14 @@
 
 <p>
 {% with name=product.title parent_name=product.parent.title %}
-    {% if product.is_child %}
-
-        {% if creating %}
-            {% if product.title %}
-                {% blocktrans %}
-                    Created product variant '{{ name }}'.
-                {% endblocktrans %}
-            {% else %}
-                {% blocktrans %}
-                    Created variant of '{{ parent_name }}'.
-                {% endblocktrans %}
-            {% endif %}
-        {% else %}
-            {% if product.title %}
-                {% blocktrans %}
-                    Updated product variant '{{ name }}'.
-                {% endblocktrans %}
-            {% else %}
-                {% blocktrans %}
-                    Updated a variant of '{{ parent_name }}'.
-                {% endblocktrans %}
-            {% endif %}
-        {% endif %}
-
+    {% if creating %}
+        {% blocktrans %}
+            Created product '{{ name }}'.
+        {% endblocktrans %}
     {% else %}
-
-        {% if creating %}
-            {% blocktrans %}
-                Created product '{{ name }}'.
-            {% endblocktrans %}
-        {% else %}
-            {% blocktrans %}
-                Updated product '{{ name }}'.
-            {% endblocktrans %}
-        {% endif %}
-
+        {% blocktrans %}
+            Updated product '{{ name }}'.
+        {% endblocktrans %}
     {% endif %}
 {% endwith %}
 
