@@ -7,6 +7,7 @@ from oscar.test.factories import create_product
 from oscar.test.factories import (
     CategoryFactory, PartnerFactory, ProductFactory, ProductAttributeFactory)
 
+ChildProduct = get_model('catalogue', 'ChildProduct')
 Product = get_model('catalogue', 'Product')
 ProductClass = get_model('catalogue', 'ProductClass')
 ProductCategory = get_model('catalogue', 'ProductCategory')
@@ -38,7 +39,6 @@ class TestAStaffUser(WebTestCase):
         page = self.get(reverse('dashboard:catalogue-product-create',
                                 args=(product_class.slug,)))
         form = page.form
-        form['upc'] = '123456'
         form['title'] = 'new product'
         form['productcategory_set-0-category'] = category.id
         form.submit()
@@ -51,18 +51,12 @@ class TestAStaffUser(WebTestCase):
         page = self.get(reverse('dashboard:catalogue-product-create',
                                 args=(product_class.slug,)))
         form = page.form
-        form['upc'] = '123456'
         form['title'] = 'new product'
         form['productcategory_set-0-category'] = category.id
-        form['stockrecords-0-partner'] = self.partner.id
-        form['stockrecords-0-partner_sku'] = '14'
-        form['stockrecords-0-num_in_stock'] = '555'
-        form['stockrecords-0-price_excl_tax'] = '13.99'
         page = form.submit(name='action', value='continue')
 
         self.assertEqual(Product.objects.count(), 1)
         product = Product.objects.all()[0]
-        self.assertEqual(product.stockrecords.all()[0].partner, self.partner)
         self.assertRedirects(page, reverse('dashboard:catalogue-product',
                                            kwargs={'pk': product.id}))
 
@@ -155,14 +149,14 @@ class TestAStaffUser(WebTestCase):
         assert product2 in products_on_page
 
     def test_can_create_a_child_product(self):
-        parent_product = create_product(structure='parent')
+        parent_product = create_product()
         url = reverse(
             'dashboard:catalogue-product-create-child',
             kwargs={'parent_pk': parent_product.pk})
         form = self.get(url).form
         form.submit()
 
-        self.assertEqual(Product.objects.count(), 2)
+        self.assertEqual(ChildProduct.objects.count(), 1)
 
     def test_cant_create_child_product_for_invalid_parents(self):
         # Creates a product with stockrecords.

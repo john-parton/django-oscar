@@ -8,6 +8,7 @@ from oscar.test.decorators import ignore_deprecation_warnings
 from oscar.test.testcases import WebTestCase
 
 from oscar.test.factories import create_product
+from oscar.test import factories
 
 
 class TestProductDetailView(WebTestCase):
@@ -23,34 +24,20 @@ class TestProductDetailView(WebTestCase):
         self.assertTrue(p.get_absolute_url() in response.location)
 
     def test_child_to_parent_redirect(self):
-        parent_product = create_product(structure='parent')
-        kwargs = {'product_slug': parent_product.slug,
-                  'pk': parent_product.id}
-        parent_product_url = reverse('catalogue:detail', kwargs=kwargs)
-
-        child = create_product(
-            title="Variant 1", structure='child', parent=parent_product)
-        kwargs = {'product_slug': child.slug,
-                  'pk': child.id}
-        child_url = reverse('catalogue:detail', kwargs=kwargs)
-
-        response = self.app.get(parent_product_url)
-        self.assertEqual(http_client.OK, response.status_code)
-
-        response = self.app.get(child_url)
-        self.assertEqual(http_client.MOVED_PERMANENTLY, response.status_code)
+        # Children no longer have their own pages and so cannot redirect to parents
+        pass
 
 
 class TestProductListView(WebTestCase):
 
     def test_shows_add_to_basket_button_for_available_product(self):
-        product = create_product(num_in_stock=1)
+        product, __, __ = factories.create_product_heirarchy(num_in_stock=1)
         page = self.app.get(reverse('catalogue:index'))
         self.assertContains(page, product.title)
         self.assertContains(page, "Add to basket")
 
     def test_shows_not_available_for_out_of_stock_product(self):
-        product = create_product(num_in_stock=0)
+        product, __, __ = factories.create_product_heirarchy(num_in_stock=0)
 
         page = self.app.get(reverse('catalogue:index'))
 
@@ -61,7 +48,7 @@ class TestProductListView(WebTestCase):
         per_page = settings.OSCAR_PRODUCTS_PER_PAGE
         title = u"Product #%d"
         for idx in range(0, int(1.5 * per_page)):
-            create_product(title=title % idx)
+            factories.create_product_heirarchy(title=title % idx)
 
         page = self.app.get(reverse('catalogue:index'))
 
