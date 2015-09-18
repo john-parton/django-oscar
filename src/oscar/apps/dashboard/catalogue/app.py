@@ -30,6 +30,9 @@ class CatalogueApplication(Application):
     product_delete_view = get_class('dashboard.catalogue.views',
                                     'ProductDeleteView')
 
+    child_product_createupdate_view = get_class('dashboard.catalogue.views',
+                                                'ChildProductCreateUpdateView')
+
     product_class_create_view = get_class('dashboard.catalogue.views',
                                           'ProductClassCreateView')
     product_class_update_view = get_class('dashboard.catalogue.views',
@@ -65,8 +68,11 @@ class CatalogueApplication(Application):
                 self.product_createupdate_view.as_view(),
                 name='catalogue-product-create'),
             url(r'^products/(?P<parent_pk>[-\d]+)/create-variant/$',
-                self.product_createupdate_view.as_view(),
+                self.child_product_createupdate_view.as_view(),
                 name='catalogue-product-create-child'),
+            url(r'^variants/(?P<pk>[-\d]+)/$',
+                self.child_product_createupdate_view.as_view(),
+                name='catalogue-child-product'),
             url(r'^products/(?P<pk>\d+)/delete/$',
                 self.product_delete_view.as_view(),
                 name='catalogue-product-delete'),
