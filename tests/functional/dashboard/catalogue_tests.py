@@ -64,7 +64,7 @@ class TestAStaffUser(WebTestCase):
     def test_can_update_a_product_without_stockrecord(self):
         new_title = u'foobar'
         category = CategoryFactory()
-        product = ProductFactory(stockrecords=[])
+        product = ProductFactory()
 
         page = self.get(
             reverse('dashboard:catalogue-product',
@@ -82,14 +82,14 @@ class TestAStaffUser(WebTestCase):
             pass
         else:
             self.assertTrue(product.title == new_title)
-            if product.has_stockrecords:
-                self.fail('Product has stock records but should not')
 
     def test_can_create_child_product_with_required_attributes(self):
-        num_initial_child_products = ChildProduct.objects.count()
         attribute = ProductAttributeFactory(required=True)
         product_class = attribute.product_class
         parent_product = ProductFactory(product_class=product_class)
+
+        num_initial_child_products = ChildProduct.objects.count()
+
         url = reverse(
             'dashboard:catalogue-product-create-child',
             kwargs={'parent_pk': parent_product.pk})
@@ -118,8 +118,7 @@ class TestAStaffUser(WebTestCase):
         self.assertEqual(ProductCategory.objects.count(), 0)
 
     def test_can_delete_a_parent_product(self):
-        parent_product = create_product(structure='parent')
-        create_product(parent=parent_product)
+        parent_product = factories.ProductFactory()
 
         url = reverse(
             'dashboard:catalogue-product-delete',
@@ -160,16 +159,6 @@ class TestAStaffUser(WebTestCase):
         form.submit()
 
         self.assertEqual(ChildProduct.objects.count(), 1)
-
-    def test_cant_create_child_product_for_invalid_parents(self):
-        # Creates a product with stockrecords.
-        invalid_parent = create_product(partner_users=[self.user])
-        self.assertFalse(invalid_parent.can_be_parent())
-        url = reverse(
-            'dashboard:catalogue-product-create-child',
-            kwargs={'parent_pk': invalid_parent.pk})
-        self.assertRedirects(
-            self.get(url), reverse('dashboard:catalogue-product-list'))
 
 
 class TestANonStaffUser(TestAStaffUser):

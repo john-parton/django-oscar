@@ -3,7 +3,7 @@ from oscar.test import factories
 
 from oscar.test.testcases import WebTestCase
 from oscar.core.compat import get_user_model
-from oscar.apps.catalogue.models import Product
+from oscar.apps.catalogue.models import ChildProduct, Product
 from oscar.test.factories import (
     CategoryFactory, ProductFactory, ProductClassFactory)
 
@@ -56,15 +56,13 @@ class TestCreateParentProduct(ProductWebTest):
         self.pclass = ProductClassFactory(name='Books', slug='books')
         super(TestCreateParentProduct, self).setUp()
 
-    def submit(self, title=None, category=None, upc=None):
+    def submit(self, title=None, category=None):
         url = reverse('dashboard:catalogue-product-create',
                       kwargs={'product_class_slug': self.pclass.slug})
 
         product_form = self.get(url).form
 
         product_form['title'] = title
-        product_form['upc'] = upc
-        product_form['structure'] = 'parent'
 
         if category:
             product_form['productcategory_set-0-category'] = category.id
@@ -88,20 +86,6 @@ class TestCreateParentProduct(ProductWebTest):
         response = self.submit(title='testing', category=category)
         self.assertIsRedirect(response)
         self.assertEqual(Product.objects.count(), 1)
-
-    def test_doesnt_allow_duplicate_upc(self):
-        ProductFactory(parent=None, upc="12345")
-        category = CategoryFactory()
-        self.assertTrue(Product.objects.get(upc="12345"))
-
-        response = self.submit(title="Nice T-Shirt", category=category,
-                               upc="12345")
-
-        self.assertEqual(Product.objects.count(), 1)
-        self.assertNotEqual(Product.objects.get(upc='12345').title,
-                            'Nice T-Shirt')
-        self.assertContains(response,
-                            "Product with this UPC already exists.")
 
 
 class TestCreateChildProduct(ProductWebTest):
@@ -127,6 +111,20 @@ class TestCreateChildProduct(ProductWebTest):
             self.fail('creating a child product did not work')
 
         self.assertEqual(product.parent, self.parent)
+
+    def test_doesnt_allow_duplicate_upc(self):
+        factories.ChildProductFactory(upc="12345")
+        category = CategoryFactory()
+        self.assertTrue(ChildProduct.objects.get(upc="12345"))
+
+        response = self.submit(title="Nice T-Shirt", category=category,
+                               upc="12345")
+
+        self.assertEqual(Product.objects.count(), 1)
+        self.assertNotEqual(Product.objects.get(upc='12345').title,
+                            'Nice T-Shirt')
+        self.assertContains(response,
+                            "Product with this UPC already exists.")
 
 
 class TestProductUpdate(ProductWebTest):
