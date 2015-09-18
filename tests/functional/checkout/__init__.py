@@ -22,9 +22,7 @@ class CheckoutMixin(object):
 
     def add_product_to_basket(self, product=None):
         if product is None:
-            product = factories.ProductFactory()
-            factories.StockRecordFactory(
-                num_in_stock=10, price_excl_tax=D('12.00'), product=product)
+            __, product, __ = factories.create_product_heirarchy(num_in_stock=10, price_excl_tax=D('12.00'))
         detail_page = self.get(product.get_absolute_url())
         form = detail_page.forms['add_to_basket_form']
         form.submit()

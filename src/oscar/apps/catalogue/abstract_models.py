@@ -566,10 +566,10 @@ class AbstractChildProduct(models.Model):
 
     def get_absolute_url(self):
         """
-        Return a product's absolute url
+        By default just goes to the parent's page.
+        If you render individual child pages, override this.
         """
-        return reverse('catalogue:detail',
-                       kwargs={'product_slug': self.slug, 'pk': self.id})
+        return self.parent.get_absolute_url()
 
     def clean(self):
         """
