@@ -54,6 +54,8 @@ def create_child_product(product=None, upc=None, title=u"Dùｍϻϒ child title"
             product.product_class.attributes.get_or_create(name=code, code=code)
             setattr(child.attr, code, value)
 
+    child.save()
+
     # Shortcut for creating stockrecord
     stockrecord_fields = [
         price, partner_sku, partner_name, num_in_stock, partner_users]
@@ -144,8 +146,9 @@ def create_basket(empty=False):
     basket.strategy = strategy.Default()
     if not empty:
         product = create_product()
-        create_stockrecord(product, num_in_stock=2)
-        basket.add_product(product)
+        child = product.children.all()[0]
+        create_stockrecord(child, num_in_stock=2)
+        basket.add_product(child)
     return basket
 
 
