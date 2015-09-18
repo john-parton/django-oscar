@@ -203,11 +203,6 @@
                             {% trans "Cancel" %}
                         </a>
                         {% trans "or" %}
-                        {% if parent %}
-                            <button class="btn btn-default btn-lg" name="action" type="submit" value="create-another-child" data-loading-text="{% trans 'Saving...' %}">
-                                {% trans "Save and add another variant" %}
-                            </button>
-                        {% endif %}
                         <button class="btn btn-default btn-lg" name="action" type="submit" value="continue" data-loading-text="{% trans 'Saving...' %}">
                             {% trans "Save and continue editing" %}
                         </button>
@@ -215,9 +210,7 @@
                             {% trans "Save" %}
                         </button>
                     </div>
-                    {% if product %}
-                        <a class="btn btn-success btn-lg" href="{{ product.get_absolute_url }}">{% trans "View on site" %}</a>
-                    {% endif %}
+                    <a class="btn btn-success btn-lg" href="{{ product.get_absolute_url }}">{% trans "View on site" %}</a>
                 </div>
             </div>
         {% endblock fixed_actions_group %}

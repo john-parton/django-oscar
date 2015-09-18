@@ -197,8 +197,8 @@ class BaseProductCreateUpdateView(generic.UpdateView):
 
         for ctx_name, formset_class in self.formsets.items():
             if ctx_name not in ctx:
-                ctx[ctx_name] = formset_class(self.product_class,
-                                              self.request.user,
+                ctx[ctx_name] = formset_class(product_class=self.product_class,
+                                              user=self.request.user,
                                               instance=self.object)
         return ctx
 
@@ -224,10 +224,10 @@ class BaseProductCreateUpdateView(generic.UpdateView):
 
         formsets = {}
         for ctx_name, formset_class in self.formsets.items():
-            formsets[ctx_name] = formset_class(self.product_class,
-                                               self.request.user,
-                                               self.request.POST,
+            formsets[ctx_name] = formset_class(self.request.POST,
                                                self.request.FILES,
+                                               product_class=self.product_class,
+                                               user=self.request.user,
                                                instance=self.object)
 
         is_valid = form.is_valid() and all([formset.is_valid()
@@ -308,7 +308,7 @@ class BaseProductCreateUpdateView(generic.UpdateView):
         action = self.request.POST.get('action')
         if action == 'continue':
             url = reverse(
-                'dashboard:catalogue-product', kwargs={"pk": self.object.id})
+                self.continue_pattern, kwargs={"pk": self.object.id})
         elif action == 'create-another-child' and self.parent:
             url = reverse(
                 'dashboard:catalogue-product-create-child',
@@ -330,6 +330,8 @@ class ChildProductCreateUpdateView(BaseProductCreateUpdateView):
 
     form_class = ChildProductForm
     stockrecord_formset = StockRecordFormSet
+
+    continue_pattern = 'dashboard:catalogue-child-product'
 
     def __init__(self, *args, **kwargs):
         super(ChildProductCreateUpdateView, self).__init__(*args, **kwargs)
@@ -370,6 +372,8 @@ class ProductCreateUpdateView(BaseProductCreateUpdateView):
     category_formset = ProductCategoryFormSet
     image_formset = ProductImageFormSet
     recommendations_formset = ProductRecommendationFormSet
+
+    continue_pattern = 'dashboard:catalogue-product'
 
     def __init__(self, *args, **kwargs):
         super(ProductCreateUpdateView, self).__init__(*args, **kwargs)

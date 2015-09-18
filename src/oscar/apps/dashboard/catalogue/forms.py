@@ -84,14 +84,20 @@ class StockRecordForm(forms.ModelForm):
 BaseStockRecordFormSet = inlineformset_factory(
     ChildProduct, StockRecord, form=StockRecordForm, extra=1)
 
+class ProductFormSetMixin(object):
+    """
+    All the ProductFormSets require a user and product_class.
+    """
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        self.product_class = kwargs.pop('product_class', None)
+        super(ProductFormSetMixin, self).__init__(*args, **kwargs)
 
-class StockRecordFormSet(BaseStockRecordFormSet):
+class StockRecordFormSet(ProductFormSetMixin, BaseStockRecordFormSet):
 
-    def __init__(self, product_class, user, *args, **kwargs):
-        self.user = user
-        self.require_user_stockrecord = not user.is_staff
-        self.product_class = product_class
+    def __init__(self, *args, **kwargs):
         super(StockRecordFormSet, self).__init__(*args, **kwargs)
+        self.require_user_stockrecord = not self.user.is_staff
         self.set_initial_data()
 
     def set_initial_data(self):
@@ -338,20 +344,13 @@ BaseProductCategoryFormSet = inlineformset_factory(
     can_delete=True)
 
 
-class ProductCategoryFormSet(BaseProductCategoryFormSet):
-
-    def __init__(self, product_class, user, *args, **kwargs):
-        # This function just exists to drop the extra arguments
-        super(ProductCategoryFormSet, self).__init__(*args, **kwargs)
+class ProductCategoryFormSet(ProductFormSetMixin, BaseProductCategoryFormSet):
 
     def clean(self):
-        if not self.instance.is_child and self.get_num_categories() == 0:
+        if self.get_num_categories() == 0:
             raise forms.ValidationError(
                 _("Stand-alone and parent products "
                   "must have at least one category"))
-        if self.instance.is_child and self.get_num_categories() > 0:
-            raise forms.ValidationError(
-                _("A child product should not have categories"))
 
     def get_num_categories(self):
         num_categories = 0
@@ -392,12 +391,8 @@ class ProductImageForm(forms.ModelForm):
 BaseProductImageFormSet = inlineformset_factory(
     Product, ProductImage, form=ProductImageForm, extra=2)
 
-
-class ProductImageFormSet(BaseProductImageFormSet):
-
-    def __init__(self, product_class, user, *args, **kwargs):
-        super(ProductImageFormSet, self).__init__(*args, **kwargs)
-
+class ProductImageFormSet(ProductFormSetMixin, BaseProductImageFormSet):
+    pass
 
 class ProductRecommendationForm(forms.ModelForm):
 
@@ -417,11 +412,8 @@ BaseProductRecommendationFormSet = inlineformset_factory(
     Product, ProductRecommendation, form=ProductRecommendationForm,
     extra=5, fk_name="primary")
 
-
-class ProductRecommendationFormSet(BaseProductRecommendationFormSet):
-
-    def __init__(self, product_class, user, *args, **kwargs):
-        super(ProductRecommendationFormSet, self).__init__(*args, **kwargs)
+class ProductRecommendationFormSet(ProductFormSetMixin, BaseProductRecommendationFormSet):
+    pass
 
 
 class ProductClassForm(forms.ModelForm):
