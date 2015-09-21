@@ -18,12 +18,12 @@ def add_product(basket, price=None, quantity=1, product=None):
     if price is None:
         price = D('1')
     if product:
-        record = product.stockrecords.all()[0]
+        stockrecord = product.stockrecords.all()[0]
     else:
-        __, product, __ = factories.create_product_heirarchy(
+        __, __, stockrecord = factories.create_product_heirarchy(
             price_excl_tax=price,
             num_in_stock=quantity + 1)
-    basket.add_product(record.product, quantity)
+    basket.add_product(stockrecord.product, quantity)
 
 
 def add_products(basket, args):

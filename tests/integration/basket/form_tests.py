@@ -55,9 +55,9 @@ class TestAddToBasketForm(TestCase):
         product = basket.all_lines()[0].product
 
         # Add more of the same product
-        data = {'quantity': 1}
+        data = {'quantity': 1, 'child': product.id}
         form = forms.AddToBasketForm(
-            basket=basket, product=product, data=data)
+            basket=basket, product=product.parent, data=data)
         self.assertTrue(form.is_valid())
 
     def test_checks_whether_passed_product_id_matches_a_real_product(self):
@@ -65,14 +65,14 @@ class TestAddToBasketForm(TestCase):
         product = basket.all_lines()[0].product
 
         # Add more of the same product
-        data = {'quantity': -1}
+        data = {'quantity': -1, 'child': product.id}
         form = forms.AddToBasketForm(
-            basket=basket, product=product, data=data)
+            basket=basket, product=product.parent, data=data)
         self.assertFalse(form.is_valid())
 
     def test_checks_if_purchase_is_permitted(self):
         basket = factories.BasketFactory()
-        product = factories.ProductFactory()
+        parent, product, __ = factories.create_product_heirarchy()
 
         # Build a 4-level mock monster so we can force the return value of
         # whether the product is available to buy. This is a serious code smell
@@ -84,9 +84,9 @@ class TestAddToBasketForm(TestCase):
         basket.strategy.fetch_for_product = mock.Mock(
             return_value=info)
 
-        data = {'quantity': 1}
+        data = {'quantity': 1, 'child': product.id}
         form = forms.AddToBasketForm(
-            basket=basket, product=product, data=data)
+            basket=basket, product=parent, data=data)
         self.assertFalse(form.is_valid())
         self.assertEqual('Not on your nelly!', form.errors['__all__'][0])
 

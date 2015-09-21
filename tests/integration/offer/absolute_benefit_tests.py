@@ -13,17 +13,17 @@ from oscar.test import factories
 class TestAnAbsoluteDiscountAppliedWithCountConditionOnDifferentRange(TestCase):
 
     def setUp(self):
-        self.condition_product = factories.ProductFactory()
+        __, self.condition_product, __ = factories.create_product_heirarchy()
         condition_range = factories.RangeFactory()
-        condition_range.add_product(self.condition_product)
+        condition_range.add_product(self.condition_product.parent)
         self.condition = models.CountCondition.objects.create(
             range=condition_range,
             type=models.Condition.COUNT,
             value=2)
 
-        self.benefit_product = factories.ProductFactory()
+        __, self.benefit_product, __ = factories.create_product_heirarchy()
         benefit_range = factories.RangeFactory()
-        benefit_range.add_product(self.benefit_product)
+        benefit_range.add_product(self.benefit_product.parent)
         self.benefit = models.AbsoluteDiscountBenefit.objects.create(
             range=benefit_range,
             type=models.Benefit.FIXED,

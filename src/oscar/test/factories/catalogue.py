@@ -96,7 +96,7 @@ class AttributeOptionGroupFactory(factory.DjangoModelFactory):
 
 class ProductAttributeValueFactory(factory.DjangoModelFactory):
     attribute = factory.SubFactory(ProductAttributeFactory)
-    product = factory.SubFactory(ProductFactory)
+    product = factory.SubFactory(ChildProductFactory)
 
     class Meta:
         model = get_model('catalogue', 'ProductAttributeValue')

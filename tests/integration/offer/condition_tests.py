@@ -22,11 +22,12 @@ class TestCountCondition(TestCase):
         self.assertFalse(self.condition.is_satisfied(self.offer, self.basket))
 
     def test_not_discountable_product_fails_condition(self):
-        prod1, prod2 = factories.create_product(), factories.create_product()
-        prod2.is_discountable = False
-        prod2.save()
-        add_product(self.basket, product=prod1)
-        add_product(self.basket, product=prod2)
+        __, product1, __ = factories.create_product_heirarchy()
+        __, product2, __ = factories.create_product_heirarchy()
+        product2.parent.is_discountable = False
+        product2.parent.save()
+        add_product(self.basket, product=product1)
+        add_product(self.basket, product=product2)
         self.assertFalse(self.condition.is_satisfied(self.offer, self.basket))
 
     def test_empty_basket_fails_partial_condition(self):
@@ -87,7 +88,9 @@ class ValueConditionTest(TestCase):
         self.assertFalse(self.condition.is_satisfied(self.offer, self.basket))
 
     def test_not_discountable_item_fails_condition(self):
-        product = factories.create_product(is_discountable=False)
+        parent, product, __ = factories.create_product_heirarchy()
+        parent.is_discountable = False
+        parent.save()
         add_product(self.basket, D('15'), product=product)
         self.assertFalse(self.condition.is_satisfied(self.offer, self.basket))
 
@@ -131,11 +134,14 @@ class ValueConditionTest(TestCase):
 class TestCoverageCondition(TestCase):
 
     def setUp(self):
-        self.products = [factories.create_product(), factories.create_product()]
+        self.products = []
+        for __ in range(2):
+            __, product, __ = factories.create_product_heirarchy()
+            self.products.append(product)
         self.range = models.Range.objects.create(name="Some products")
         for product in self.products:
-            self.range.add_product(product)
-            self.range.add_product(product)
+            self.range.add_product(product.parent)
+            self.range.add_product(product.parent)
         self.basket = factories.create_basket(empty=True)
         self.condition = models.CoverageCondition(
             range=self.range, type="Coverage", value=2)
@@ -197,8 +203,9 @@ class TestCoverageCondition(TestCase):
         cond = models.CoverageCondition(range=range, type="Coverage", value=2)
 
         # Get 4 distinct products in the basket
-        self.products.extend(
-            [factories.create_product(), factories.create_product()])
+        for __ in range(2):
+            __, product, __ = factories.create_product_heirarchy()
+            self.products.append(product)
         for product in self.products:
             add_product(self.basket, product=product)
 

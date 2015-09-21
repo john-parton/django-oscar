@@ -73,8 +73,10 @@ class ProductAttributeCreationTests(TestCase):
     def test_entity_attributes(self):
         unrelated_object = factories.PartnerFactory()
         attribute = factories.ProductAttributeFactory(type='entity')
+        
+        __, product, __ = factories.create_product_heirarchy()
 
         attribute_value = factories.ProductAttributeValueFactory(
-            attribute=attribute, value_entity=unrelated_object)
+            product=product, attribute=attribute, value_entity=unrelated_object)
 
         self.assertEqual(attribute_value.value, unrelated_object)
