@@ -30,9 +30,9 @@ class TestDefaultStrategy(TestCase):
     def test_product_which_doesnt_track_stock(self):
         product_class = models.ProductClass.objects.create(
             name="Digital", track_stock=False)
-        product = factories.create_product(
-            product_class=product_class,
-            price=D('1.99'), num_in_stock=None)
+        __, product, __ = factories.create_product_heirarchy(product_class=product_class.name,
+                                                             price_excl_tax=D('1.99'), 
+                                                             num_in_stock=None)
         info = self.strategy.fetch_for_product(product)
         self.assertTrue(info.availability.is_available_to_buy)
 
@@ -54,9 +54,9 @@ class TestDefaultStrategyForParentProductWhoseVariantsHaveNoStockRecords(TestCas
 
     def setUp(self):
         self.strategy = strategy.Default()
-        parent = factories.create_product(structure='parent')
-        for x in range(3):
-            factories.create_product(parent=parent)
+        parent, __, stockrecord = factories.create_product_heirarchy(price_excl_tax=D('10.00'),
+                                                                     num_in_stock=3)
+        stockrecord.delete()
         self.info = self.strategy.fetch_for_parent(parent)
 
     def test_specifies_product_is_unavailable(self):
@@ -73,11 +73,8 @@ class TestDefaultStrategyForParentProductWithInStockVariant(TestCase):
 
     def setUp(self):
         self.strategy = strategy.Default()
-        parent = factories.create_product(structure='parent')
-        factories.create_product(parent=parent, price=D('10.00'),
-                                 num_in_stock=3)
-        for x in range(2):
-            factories.create_product(parent=parent)
+        parent, __, __ = factories.create_product_heirarchy(price_excl_tax=D('10.00'),
+                                                                  num_in_stock=3)
         self.info = self.strategy.fetch_for_parent(parent)
 
     def test_specifies_product_is_available(self):
@@ -94,11 +91,8 @@ class TestDefaultStrategyForParentProductWithOutOfStockVariant(TestCase):
 
     def setUp(self):
         self.strategy = strategy.Default()
-        parent = factories.create_product(structure='parent')
-        factories.create_product(
-            parent=parent, price=D('10.00'), num_in_stock=0)
-        for x in range(2):
-            factories.create_product(parent=parent)
+        parent, __, __ = factories.create_product_heirarchy(price_excl_tax=D('10.00'),
+                                                                  num_in_stock=0)
         self.info = self.strategy.fetch_for_parent(parent)
 
     def test_specifies_product_is_unavailable(self):

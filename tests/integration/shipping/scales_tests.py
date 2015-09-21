@@ -9,51 +9,49 @@ from oscar.test import factories
 
 class TestScales(TestCase):
 
+    def setUp(self):
+        self.weight = factories.ProductAttributeFactory()
+        self.product_class = self.weight.product_class
+        self.scale = Scale(attribute_code='weight')
+        self.scale_with_default = Scale(attribute_code='weight', default_weight=0.5)
+
+    def _create_product_with_weight(self, weight=None):
+        __, product, __ = factories.create_product_heirarchy(product_class=self.product_class.name)
+        if weight is not None:
+            product.attr.weight = weight
+            product.save()
+        return product
+
     def test_weighs_uses_specified_attribute(self):
-        scale = Scale(attribute_code='weight')
-        __, product, __ = factories.create_product_heirarchy()
-        product.attr.weight = 1
-        product.save()
-        self.assertEqual(1, scale.weigh_product(p))
+        product = self._create_product_with_weight(weight=1)
+        self.assertEqual(1, self.scale.weigh_product(product))
 
     def test_uses_default_weight_when_attribute_is_missing(self):
-        scale = Scale(attribute_code='weight', default_weight=0.5)
-        __, product, __ = factories.create_product_heirarchy()
-        self.assertEqual(0.5, scale.weigh_product(product))
+        product = self._create_product_with_weight(weight=None)
+        self.assertEqual(0.5, self.scale_with_default.weigh_product(product))
 
     def test_raises_exception_when_attribute_is_missing(self):
-        scale = Scale(attribute_code='weight')
-        __, product, __ = factories.create_product_heirarchy()
+        product = self._create_product_with_weight(weight=None)
         with self.assertRaises(ValueError):
-            scale.weigh_product(product)
+            self.scale.weigh_product(product)
 
     def test_returns_zero_for_empty_basket(self):
         basket = Basket()
-
-        scale = Scale(attribute_code='weight')
-        self.assertEqual(0, scale.weigh_basket(basket))
+        self.assertEqual(0, self.scale.weigh_basket(basket))
 
     def test_returns_correct_weight_for_nonempty_basket(self):
         basket = factories.create_basket(empty=True)
 
         for weight in ('1', '2'):
-            __, product, __ = factories.create_product_heirarchy()
-            product.attr.weight = weight
-            product.save()
+            product = self._create_product_with_weight(weight=weight)
             basket.add(product)
 
-        scale = Scale(attribute_code='weight')
-        self.assertEqual(1 + 2, scale.weigh_basket(basket))
+        self.assertEqual(1 + 2, self.scale.weigh_basket(basket))
 
     def test_returns_correct_weight_for_nonempty_basket_with_line_quantities(self):
         basket = factories.create_basket(empty=True)
-        products = [
-            (factories.create_product(attributes={'weight': '1'},
-                                      price=D('5.00')), 3),
-            (factories.create_product(attributes={'weight': '2'},
-                                      price=D('5.00')), 4)]
-        for product, quantity in products:
+        for weight, quantity in [('1', 3), ('2', 4)]:
+            product = self._create_product_with_weight(weight=weight)
             basket.add(product, quantity=quantity)
 
-        scale = Scale(attribute_code='weight')
-        self.assertEqual(1*3 + 2*4, scale.weigh_basket(basket))
+        self.assertEqual(1*3 + 2*4, self.scale.weigh_basket(basket))

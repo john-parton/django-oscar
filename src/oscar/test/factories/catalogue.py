@@ -9,7 +9,7 @@ __all__ = [
     'ProductAttributeFactory', 'AttributeOptionGroupFactory',
     'OptionFactory', 'AttributeOptionFactory',
     'ProductAttributeValueFactory', 'ProductReviewFactory',
-    'ChildProductFactory'
+    'ChildProductFactory', 'ChildProductWithParentFactory'
 ]
 
 
@@ -99,7 +99,7 @@ class AttributeOptionGroupFactory(factory.DjangoModelFactory):
 
 class ProductAttributeValueFactory(factory.DjangoModelFactory):
     attribute = factory.SubFactory(ProductAttributeFactory)
-    product = factory.SubFactory(ChildProductFactory)
+    product = factory.SubFactory(ChildProductWithParentFactory)
 
     class Meta:
         model = get_model('catalogue', 'ProductAttributeValue')

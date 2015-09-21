@@ -34,12 +34,11 @@ class TestOrderAndItemCharges(TestCase):
 
     def test_single_item_basket_that_doesnt_require_shipping(self):
         # Create a product that doesn't require shipping
-        record = factories.create_stockrecord()
-        product = record.product
-        product.product_class.requires_shipping = False
-        product.product_class.save()
+        parent, product, __ = factories.create_product_heirarchy()
+        parent.product_class.requires_shipping = False
+        parent.product_class.save()
         basket = factories.create_basket(empty=True)
-        basket.add_product(record.product)
+        basket.add_product(product)
 
         charge = self.method.calculate(basket)
 
