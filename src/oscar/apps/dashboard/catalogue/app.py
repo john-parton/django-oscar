@@ -17,6 +17,8 @@ class CatalogueApplication(Application):
                                      ['partner.dashboard_access']),
         'catalogue-product-lookup': (['is_staff'],
                                      ['partner.dashboard_access']),
+        'catalogue-child-product-delete': (['is_staff'],
+                                     ['partner.dashboard_access']),
     }
 
     product_list_view = get_class('dashboard.catalogue.views',
