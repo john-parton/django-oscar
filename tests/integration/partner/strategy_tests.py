@@ -20,7 +20,8 @@ class TestDefaultStrategy(TestCase):
         self.assertIsNone(info.price.incl_tax)
 
     def test_one_stockrecord(self):
-        product = factories.create_product(price=D('1.99'), num_in_stock=4)
+        __, product, __ = factories.create_product_heirarchy(price_excl_tax=D('1.99'), 
+                                                             num_in_stock=4)
         info = self.strategy.fetch_for_product(product)
         self.assertTrue(info.availability.is_available_to_buy)
         self.assertEqual(D('1.99'), info.price.excl_tax)

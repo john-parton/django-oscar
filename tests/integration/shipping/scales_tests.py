@@ -11,19 +11,21 @@ class TestScales(TestCase):
 
     def test_weighs_uses_specified_attribute(self):
         scale = Scale(attribute_code='weight')
-        p = factories.create_product(attributes={'weight': '1'})
+        __, product, __ = factories.create_product_heirarchy()
+        product.attr.weight = 1
+        product.save()
         self.assertEqual(1, scale.weigh_product(p))
 
     def test_uses_default_weight_when_attribute_is_missing(self):
         scale = Scale(attribute_code='weight', default_weight=0.5)
-        p = factories.create_product()
-        self.assertEqual(0.5, scale.weigh_product(p))
+        __, product, __ = factories.create_product_heirarchy()
+        self.assertEqual(0.5, scale.weigh_product(product))
 
     def test_raises_exception_when_attribute_is_missing(self):
         scale = Scale(attribute_code='weight')
-        p = factories.create_product()
+        __, product, __ = factories.create_product_heirarchy()
         with self.assertRaises(ValueError):
-            scale.weigh_product(p)
+            scale.weigh_product(product)
 
     def test_returns_zero_for_empty_basket(self):
         basket = Basket()
@@ -33,12 +35,11 @@ class TestScales(TestCase):
 
     def test_returns_correct_weight_for_nonempty_basket(self):
         basket = factories.create_basket(empty=True)
-        products = [
-            factories.create_product(attributes={'weight': '1'},
-                                     price=D('5.00')),
-            factories.create_product(attributes={'weight': '2'},
-                                     price=D('5.00'))]
-        for product in products:
+
+        for weight in ('1', '2'):
+            __, product, __ = factories.create_product_heirarchy()
+            product.attr.weight = weight
+            product.save()
             basket.add(product)
 
         scale = Scale(attribute_code='weight')
