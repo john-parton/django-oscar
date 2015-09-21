@@ -111,8 +111,7 @@ class TestCreateChildProduct(ProductWebTest):
 
         self.assertEqual(ChildProduct.objects.count(), 1)
         self.assertEqual(ChildProduct.objects.get(upc='12345').title, 'Nice T-Shirt')
-        self.assertContains(response,
-                            "Product with this UPC already exists.")
+        self.assertContains(response, "Child product with this UPC already exists.")
 
 
 class TestProductUpdate(ProductWebTest):
