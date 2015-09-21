@@ -26,27 +26,27 @@ class RangeProductFormTests(TestCase):
         self.assertFalse(form.is_valid())
 
     def test_matching_query_is_valid(self):
-        create_product(partner_sku='123123')
+        factories.create_product_heirarchy(partner_sku='123123')
         form = self.submit_form({'query': '123123'})
         self.assertTrue(form.is_valid())
 
     def test_passing_form_return_product_list(self):
-        product = create_product(partner_sku='123123')
+        parent, __, __ = factories.create_product_heirarchy(partner_sku='123123')
         form = self.submit_form({'query': '123123'})
         form.is_valid()
         self.assertEqual(1, len(form.get_products()))
-        self.assertEqual(product.id, form.get_products()[0].id)
+        self.assertEqual(parent.id, form.get_products()[0].id)
 
     def test_missing_skus_are_available(self):
-        create_product(partner_sku='123123')
+        factories.create_product_heirarchy(partner_sku='123123')
         form = self.submit_form({'query': '123123, 123xxx'})
         form.is_valid()
         self.assertEqual(1, len(form.get_missing_skus()))
         self.assertTrue('123xxx' in form.get_missing_skus())
 
     def test_only_dupes_is_invalid(self):
-        product = create_product(partner_sku='123123')
-        self.range.add_product(product)
+        parent, __, __ = factories.create_product_heirarchy(partner_sku='123123')
+        self.range.add_product(parent)
         form = self.submit_form({'query': '123123'})
         self.assertFalse(form.is_valid())
 
