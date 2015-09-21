@@ -10,6 +10,7 @@ class TestStockRequiredMixin(TestCase):
 
     def setUp(self):
         self.mixin = strategy.StockRequired()
+        self.parent = mock.Mock()
         self.product = mock.Mock()
         self.stockrecord = mock.Mock()
         self.stockrecord.price_excl_tax = D('12.00')
@@ -21,14 +22,14 @@ class TestStockRequiredMixin(TestCase):
 
     def test_returns_available_when_product_class_doesnt_track_stock(self):
         product_class = mock.Mock(track_stock=False)
-        self.product.get_product_class = mock.Mock(return_value=product_class)
-        policy = self.mixin.availability_policy(
-            self.product, self.stockrecord)
+        self.parent.product_class = product_class
+        self.product.parent = self.parent
+        policy = self.mixin.availability_policy(self.product, self.stockrecord)
         self.assertIsInstance(policy, availability.Available)
 
     def test_returns_stockrequired_when_product_class_does_track_stock(self):
         product_class = mock.Mock(track_stock=True)
-        self.product.get_product_class = mock.Mock(return_value=product_class)
-        policy = self.mixin.availability_policy(
-            self.product, self.stockrecord)
+        self.parent.product_class = product_class
+        self.product.parent = self.parent
+        policy = self.mixin.availability_policy(self.product, self.stockrecord)
         self.assertIsInstance(policy, availability.StockRequired)

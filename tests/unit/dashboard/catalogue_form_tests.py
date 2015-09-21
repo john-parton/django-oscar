@@ -13,15 +13,24 @@ class TestCreateProductForm(TestCase):
         return forms.ProductForm(self.product_class, parent=parent, data=data)
 
     def test_validates_that_parent_products_must_have_title(self):
-        form = self.submit({'structure': 'parent'})
+        form = self.submit()
         self.assertFalse(form.is_valid())
-        form = self.submit({'structure': 'parent', 'title': 'foo'})
+        form = self.submit({'title': 'foo'})
         self.assertTrue(form.is_valid())
+
+
+class TestCreateChildForm(TestCase):
+
+    def setUp(self):
+        self.product_class = factories.ProductClassFactory()
+    
+    def submit(self, data):
+        return forms.ChildProduct(self.product_class, data=data)
 
     def test_validates_that_child_products_dont_need_a_title(self):
         parent = factories.ProductFactory(
-            product_class=self.product_class, structure='parent')
-        form = self.submit({'structure': 'child'}, parent=parent)
+            product_class=self.product_class)
+        form = self.submit()
         self.assertTrue(form.is_valid())
 
 

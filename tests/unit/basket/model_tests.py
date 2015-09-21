@@ -2,6 +2,7 @@ from django.test import TestCase
 
 from oscar.apps.basket.models import Basket
 from oscar.apps.partner import strategy
+from oscar.test import factories
 from oscar.test.factories import (
     BasketFactory, BasketLineAttributeFactory, ProductFactory)
 
@@ -38,18 +39,22 @@ class TestBasketLine(TestCase):
 
     def test_description(self):
         basket = BasketFactory()
-        product = ProductFactory(title="A product")
+        __, product, __ = factories.create_product_heirarchy()
+        product.title = 'A product'
+        product.save()
         basket.add_product(product)
 
         line = basket.lines.first()
-        assert line.description == "A product"
+        self.assertEqual(line.description, "A product")
 
     def test_description_with_attributes(self):
         basket = BasketFactory()
-        product = ProductFactory(title="A product")
+        __, product, __ = factories.create_product_heirarchy()
+        product.title = 'A product'
+        product.save()
         basket.add_product(product)
 
         line = basket.lines.first()
         BasketLineAttributeFactory(
             line=line, value=u'\u2603', option__name='with')
-        assert line.description == u"A product (with = '\u2603')"
+        self.assertEqual(line.description, u"A product (with = '\u2603')")
