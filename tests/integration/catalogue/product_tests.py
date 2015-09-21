@@ -53,19 +53,6 @@ class ChildProductTests(ProductTests):
         ChildProduct.objects.create(parent=self.parent, title='')
 
 
-class TestAChildProduct(TestCase):
-
-    def setUp(self):
-        clothing = ProductClass.objects.create(
-            name='Clothing', requires_shipping=True)
-        self.parent = clothing.products.create(
-            title="Parent", structure=Product.PARENT)
-        self.child = self.parent.children.create(structure=Product.CHILD)
-
-    def test_delegates_requires_shipping_logic(self):
-        self.assertTrue(self.child.is_shipping_required)
-
-
 class ProductAttributeCreationTests(TestCase):
 
     def test_validating_option_attribute(self):
