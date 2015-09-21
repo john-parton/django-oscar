@@ -9,18 +9,20 @@ class CatalogueApplication(Application):
 
     default_permissions = ['is_staff', ]
     permissions_map = _map = {
+        # Limit partners to just editing products for now
         'catalogue-product': (['is_staff'], ['partner.dashboard_access']),
-        'catalogue-product-create': (['is_staff'],
-                                     ['partner.dashboard_access']),
+#         'catalogue-product-create': (['is_staff'],
+#                                      ['partner.dashboard_access']),
         'catalogue-product-list': (['is_staff'], ['partner.dashboard_access']),
-        'catalogue-product-delete': (['is_staff'],
-                                     ['partner.dashboard_access']),
+#         'catalogue-product-delete': (['is_staff'],
+#                                      ['partner.dashboard_access']),
         'catalogue-product-lookup': (['is_staff'],
                                      ['partner.dashboard_access']),
-        'catalogue-child-product-create': (['is_staff'],
-                                     ['partner.dashboard_access']),
-        'catalogue-child-product-delete': (['is_staff'],
-                                     ['partner.dashboard_access']),
+        'catalogue-child-product': (['is_staff'], ['partner.dashboard_access']),
+#         'catalogue-child-product-create': (['is_staff'],
+#                                      ['partner.dashboard_access']),
+#         'catalogue-child-product-delete': (['is_staff'],
+#                                      ['partner.dashboard_access']),
     }
 
     product_list_view = get_class('dashboard.catalogue.views',
