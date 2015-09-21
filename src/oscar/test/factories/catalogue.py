@@ -104,7 +104,7 @@ class ProductAttributeValueFactory(factory.DjangoModelFactory):
 
 class ProductReviewFactory(factory.DjangoModelFactory):
     score = 5
-    product = factory.SubFactory(ProductFactory, stockrecords=[])
+    product = factory.SubFactory(ProductFactory)
 
     class Meta:
         model = get_model('reviews', 'ProductReview')

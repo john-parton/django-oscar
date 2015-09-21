@@ -3,7 +3,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 
-from oscar.apps.catalogue.models import (Product, ProductClass,
+from oscar.apps.catalogue.models import (ChildProduct, Product, ProductClass,
                                          ProductAttribute,
                                          AttributeOption)
 from oscar.test import factories
@@ -17,44 +17,6 @@ class ProductTests(TestCase):
             name='Clothing')
 
 
-class ProductCreationTests(ProductTests):
-
-    def setUp(self):
-        super(ProductCreationTests, self).setUp()
-        ProductAttribute.objects.create(product_class=self.product_class,
-                                        name='Number of pages',
-                                        code='num_pages',
-                                        type='integer')
-        Product.ENABLE_ATTRIBUTE_BINDING = True
-
-    def tearDown(self):
-        Product.ENABLE_ATTRIBUTE_BINDING = False
-
-    def test_create_products_with_attributes(self):
-        product = Product(upc='1234',
-                          product_class=self.product_class,
-                          title='testing')
-        product.attr.num_pages = 100
-        product.save()
-
-    def test_none_upc_is_represented_as_empty_string(self):
-        product = Product(product_class=self.product_class,
-                          title='testing', upc=None)
-        self.assertEqual(product.upc, u'')
-
-    def test_upc_uniqueness_enforced(self):
-        Product.objects.create(product_class=self.product_class,
-                               title='testing', upc='bah')
-        self.assertRaises(IntegrityError, Product.objects.create,
-                          product_class=self.product_class,
-                          title='testing', upc='bah')
-
-    def test_allow_two_products_without_upc(self):
-        for x in range(2):
-            Product.objects.create(product_class=self.product_class,
-                                   title='testing', upc=None)
-
-
 class TopLevelProductTests(ProductTests):
 
     def test_top_level_products_must_have_titles(self):
@@ -65,11 +27,6 @@ class TopLevelProductTests(ProductTests):
         product = Product(title=u"Kopfhörer")
         self.assertRaises(ValidationError, product.clean)
 
-    def test_top_level_products_are_part_of_browsable_set(self):
-        product = Product.objects.create(
-            product_class=self.product_class, title=u"Kopfhörer")
-        self.assertEqual(set([product]), set(Product.browsable.all()))
-
 
 class ChildProductTests(ProductTests):
 
@@ -78,15 +35,28 @@ class ChildProductTests(ProductTests):
         self.parent = Product.objects.create(
             title="Parent product",
             product_class=self.product_class,
-            structure=Product.PARENT,
             is_discountable=False)
 
-    def test_child_products_dont_need_titles(self):
-        Product.objects.create(
-            parent=self.parent, structure=Product.CHILD)
+    def test_create_child_products_with_attributes(self):
+        product = ChildProduct(upc='1234', title='testing')
+        product.attr.num_pages = 100
+        product.save()
 
-    def test_child_products_dont_need_a_product_class(self):
-        Product.objects.create(parent=self.parent, structure=Product.CHILD)
+    def test_none_upc_is_represented_as_empty_string(self):
+        product = ChildProduct(title='testing')
+        self.assertEqual(product.upc, u'')
+
+    def test_upc_uniqueness_enforced(self):
+        ChildProduct.objects.create(parent=self.parent, title='testing', upc='bah')
+        self.assertRaises(IntegrityError, ChildProduct.objects.create,
+                          parent=self.parent, title='testing', upc='bah')
+
+    def test_allow_two_child_products_without_upc(self):
+        for __ in range(2):
+            ChildProduct.objects.create(parent=self.parent, title='testing', upc=None)
+
+    def test_child_products_dont_need_titles(self):
+        Product.objects.create(parent=self.parent, title='')
 
     def test_child_products_inherit_fields(self):
         p = Product.objects.create(
