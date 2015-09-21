@@ -71,7 +71,7 @@ class TestPartialRange(TestCase):
             included, __, __ = factories.create_product_heirarchy()
             included_products.append(included)
             excluded, __, __ = factories.create_product_heirarchy()
-            excluded_products.add(excluded)
+            excluded_products.append(excluded)
 
         for product in included_products:
             models.RangeProduct.objects.create(

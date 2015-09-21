@@ -5,6 +5,7 @@ from django.core import mail
 from oscar.apps.customer.models import ProductAlert
 from oscar.test.factories import create_product, create_stockrecord
 from oscar.test.factories import UserFactory
+from oscar.test import factories
 
 
 class TestAUser(WebTest):
@@ -27,8 +28,7 @@ class TestAUserWithAnActiveStockAlert(WebTest):
 
     def setUp(self):
         self.user = UserFactory()
-        self.product = create_product()
-        self.stockrecord = create_stockrecord(self.product, num_in_stock=0)
+        __, self.product, self.stockrecord = factories.create_product_heirarchy(num_in_stock=0)
         product_page = self.app.get(self.product.get_absolute_url(),
                                     user=self.user)
         form = product_page.forms['alert_form']

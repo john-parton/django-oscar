@@ -67,7 +67,7 @@ class ZeroFreeThresholdTest(TestCase):
         self.assertEqual(D('0.00'), charge.incl_tax)
 
     def test_free_shipping_with_nonempty_basket(self):
-        record = factories.create_stockrecord(price_excl_tax=D('5.00'))
+        __, __, record = factories.create_product_heirarchy(price_excl_tax=D('5.00'))
         self.basket.add_product(record.product)
         charge = self.method.calculate(self.basket)
         self.assertEqual(D('0.00'), charge.incl_tax)
