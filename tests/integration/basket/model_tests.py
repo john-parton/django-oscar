@@ -13,10 +13,8 @@ class TestAddingAProductToABasket(TestCase):
     def setUp(self):
         self.basket = Basket()
         self.basket.strategy = strategy.Default()
-        self.product = factories.create_product()
-        self.record = factories.create_stockrecord(
-            currency='GBP',
-            product=self.product, price_excl_tax=D('10.00'))
+        __, self.product, self.record = \
+            factories.create_product_heirarchy(currency='GBP', price_excl_tax=D('10.00'))
         self.purchase_info = factories.create_purchase_info(self.record)
         self.basket.add(self.product)
 
@@ -29,9 +27,8 @@ class TestAddingAProductToABasket(TestCase):
         self.assertEqual(line.price_excl_tax, self.purchase_info.price.excl_tax)
 
     def test_means_another_currency_product_cannot_be_added(self):
-        product = factories.create_product()
-        factories.create_stockrecord(
-            currency='USD', product=product, price_excl_tax=D('20.00'))
+        __, product, __ = factories.create_product_heirarchy(currency='USD', 
+                                                             price_excl_tax=D('20.00'))
         with self.assertRaises(ValueError):
             self.basket.add(product)
 
@@ -41,9 +38,8 @@ class TestANonEmptyBasket(TestCase):
     def setUp(self):
         self.basket = Basket()
         self.basket.strategy = strategy.Default()
-        self.product = factories.create_product()
-        self.record = factories.create_stockrecord(
-            self.product, price_excl_tax=D('10.00'))
+        __, self.product, self.record = \
+            factories.create_product_heirarchy(price_excl_tax=D('10.00'))
         self.purchase_info = factories.create_purchase_info(self.record)
         self.basket.add(self.product, 10)
 
@@ -73,9 +69,7 @@ class TestANonEmptyBasket(TestCase):
             product, record))
 
     def test_returns_correct_quantity_for_existing_product_and_stockrecord_and_options(self):
-        product = factories.create_product()
-        record = factories.create_stockrecord(
-            product, price_excl_tax=D('5.00'))
+        __, product, record = factories.create_product_heirarchy(price_excl_tax=D('5.00'))
         option = Option.objects.create(name="Message")
         options = [{"option": option, "value": "2"}]
 

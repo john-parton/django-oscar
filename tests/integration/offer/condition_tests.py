@@ -158,8 +158,8 @@ class TestCoverageCondition(TestCase):
         self.assertFalse(self.condition.is_satisfied(self.offer, self.basket))
 
     def test_not_discountable_item_fails(self):
-        self.products[0].is_discountable = False
-        self.products[0].save()
+        self.products[0].parent.is_discountable = False
+        self.products[0].parent.save()
         add_product(self.basket, product=self.products[0])
         add_product(self.basket, product=self.products[1])
         self.assertFalse(self.condition.is_satisfied(self.offer, self.basket))
@@ -199,8 +199,8 @@ class TestCoverageCondition(TestCase):
 
     def test_consumed_items_checks_affected_items(self):
         # Create new offer
-        range = models.Range.objects.create(name="All products", includes_all_products=True)
-        cond = models.CoverageCondition(range=range, type="Coverage", value=2)
+        range_ = models.Range.objects.create(name="All products", includes_all_products=True)
+        cond = models.CoverageCondition(range=range_, type="Coverage", value=2)
 
         # Get 4 distinct products in the basket
         for __ in range(2):
