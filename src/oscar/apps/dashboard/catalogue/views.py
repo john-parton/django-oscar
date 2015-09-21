@@ -311,11 +311,11 @@ class BaseProductCreateUpdateView(generic.UpdateView):
                 self.continue_pattern, kwargs={"pk": self.object.id})
         elif action == 'create-another-child' and self.parent:
             url = reverse(
-                'dashboard:catalogue-product-create-child',
+                'dashboard:catalogue-child-product-create',
                 kwargs={'parent_pk': self.parent.pk})
         elif action == 'create-child':
             url = reverse(
-                'dashboard:catalogue-product-create-child',
+                'dashboard:catalogue-child-product-create',
                 kwargs={'parent_pk': self.object.pk})
         else:
             url = reverse('dashboard:catalogue-product-list')

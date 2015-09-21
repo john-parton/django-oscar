@@ -97,7 +97,7 @@ class TestCreateChildProduct(ProductWebTest):
         super(TestCreateChildProduct, self).setUp()
 
     def test_categories_are_not_required(self):
-        url = reverse('dashboard:catalogue-product-create-child',
+        url = reverse('dashboard:catalogue-child-product-create',
                       kwargs={'parent_pk': self.parent.pk})
         page = self.get(url)
 

@@ -91,7 +91,7 @@ class TestAStaffUser(WebTestCase):
         num_initial_child_products = ChildProduct.objects.count()
 
         url = reverse(
-            'dashboard:catalogue-product-create-child',
+            'dashboard:catalogue-child-product-create',
             kwargs={'parent_pk': parent_product.pk})
         page = self.get(url)
 
@@ -153,7 +153,7 @@ class TestAStaffUser(WebTestCase):
     def test_can_create_a_child_product(self):
         parent_product = create_product()
         url = reverse(
-            'dashboard:catalogue-product-create-child',
+            'dashboard:catalogue-child-product-create',
             kwargs={'parent_pk': parent_product.pk})
         form = self.get(url).form
         form.submit()
@@ -183,7 +183,7 @@ class TestANonStaffUser(TestAStaffUser):
     def test_cant_create_a_child_product(self):
         parent_product = create_product(structure='parent')
         url = reverse(
-            'dashboard:catalogue-product-create-child',
+            'dashboard:catalogue-child-product-create',
             kwargs={'parent_pk': parent_product.pk})
         response = self.get(url, status='*')
         self.assertEqual(http_client.FORBIDDEN, response.status_code)
@@ -202,8 +202,8 @@ class TestANonStaffUser(TestAStaffUser):
     # Tests below can't work because child products aren't supported with the
     # permission-based dashboard
 
-    def test_can_delete_a_child_product(self):
-        pass
+#     def test_can_delete_a_child_product(self):
+#         pass
 
     def test_can_delete_a_parent_product(self):
         pass

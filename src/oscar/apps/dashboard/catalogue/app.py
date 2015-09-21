@@ -17,6 +17,8 @@ class CatalogueApplication(Application):
                                      ['partner.dashboard_access']),
         'catalogue-product-lookup': (['is_staff'],
                                      ['partner.dashboard_access']),
+        'catalogue-child-product-create': (['is_staff'],
+                                     ['partner.dashboard_access']),
         'catalogue-child-product-delete': (['is_staff'],
                                      ['partner.dashboard_access']),
     }
@@ -73,7 +75,7 @@ class CatalogueApplication(Application):
                 name='catalogue-product-create'),
             url(r'^products/(?P<parent_pk>[-\d]+)/create-variant/$',
                 self.child_product_createupdate_view.as_view(),
-                name='catalogue-product-create-child'),
+                name='catalogue-child-product-create'),
             url(r'^variants/(?P<pk>[-\d]+)/$',
                 self.child_product_createupdate_view.as_view(),
                 name='catalogue-child-product'),
