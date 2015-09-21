@@ -13,7 +13,8 @@ class TestDefaultStrategy(TestCase):
         self.strategy = strategy.Default()
 
     def test_no_stockrecords(self):
-        product = factories.create_product()
+        __, product, stockrecord = factories.create_product_heirarchy()
+        stockrecord.delete()
         info = self.strategy.fetch_for_product(product)
         self.assertFalse(info.availability.is_available_to_buy)
         self.assertIsNone(info.price.incl_tax)
@@ -35,14 +36,14 @@ class TestDefaultStrategy(TestCase):
         self.assertTrue(info.availability.is_available_to_buy)
 
     def test_line_method_is_same_as_product_one(self):
-        product = factories.create_product()
+        __, product, stockrecord = factories.create_product_heirarchy()
         line = Line(product=product)
         info = self.strategy.fetch_for_line(line)
         self.assertFalse(info.availability.is_available_to_buy)
-        self.assertIsNone(info.price.incl_tax)
+        self.assertEqual(stockrecord.price_excl_tax, info.price.incl_tax)
 
     def test_free_product_is_available_to_buy(self):
-        product = factories.create_product(price=D('0'), num_in_stock=1)
+        __, product, __ = factories.create_product_heirarchy(price_excl_tax=D('0'), num_in_stock=1)
         info = self.strategy.fetch_for_product(product)
         self.assertTrue(info.availability.is_available_to_buy)
         self.assertTrue(info.price.exists)

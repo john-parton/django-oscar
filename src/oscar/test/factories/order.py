@@ -95,7 +95,7 @@ class OrderFactory(factory.DjangoModelFactory):
 class OrderLineFactory(factory.DjangoModelFactory):
     order = factory.SubFactory(OrderFactory)
     product = factory.SubFactory(
-        'oscar.test.factories.ProductFactory')
+        'oscar.test.factories.ChildProductWithParentFactory')
     partner_sku = factory.LazyAttribute(lambda l: l.product.upc)
     stockrecord = factory.LazyAttribute(
         lambda l: l.product.stockrecords.first())

@@ -47,8 +47,8 @@ class TestOrderAndItemCharges(TestCase):
 
     def test_multi_item_basket(self):
         basket = factories.create_basket(empty=True)
-        record = factories.create_stockrecord()
-        basket.add_product(record.product, 7)
+        __, product, __ = factories.create_product_heirarchy(price_excl_tax=D('1.00'))
+        basket.add_product(product, 7)
 
         charge = self.method.calculate(basket)
 
@@ -81,24 +81,24 @@ class TestNonZeroFreeThreshold(TestCase):
         self.basket = factories.create_basket(empty=True)
 
     def test_basket_below_threshold(self):
-        record = factories.create_stockrecord(price_excl_tax=D('5.00'))
-        self.basket.add_product(record.product)
+        __, product, __ = factories.create_product_heirarchy(price_excl_tax=D('5.00'))
+        self.basket.add_product(product)
 
         charge = self.method.calculate(self.basket)
 
         self.assertEqual(D('10.00'), charge.incl_tax)
 
     def test_basket_on_threshold(self):
-        record = factories.create_stockrecord(price_excl_tax=D('5.00'))
-        self.basket.add_product(record.product, quantity=4)
+        __, product, __ = factories.create_product_heirarchy(price_excl_tax=D('5.00'))
+        self.basket.add_product(product, quantity=4)
 
         charge = self.method.calculate(self.basket)
 
         self.assertEqual(D('0.00'), charge.incl_tax)
 
     def test_basket_above_threshold(self):
-        record = factories.create_stockrecord(price_excl_tax=D('5.00'))
-        self.basket.add_product(record.product, quantity=8)
+        __, product, __ = factories.create_product_heirarchy(price_excl_tax=D('5.00'))
+        self.basket.add_product(product, quantity=8)
 
         charge = self.method.calculate(self.basket)
 

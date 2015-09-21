@@ -40,6 +40,9 @@ class ChildProductFactory(factory.DjangoModelFactory):
     stockrecords = factory.RelatedFactory(
         'oscar.test.factories.StockRecordFactory', 'product')
 
+class ChildProductWithParentFactory(ChildProductFactory):
+    parent = factory.SubFactory(ProductFactory)
+
 class CategoryFactory(factory.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Category %d' % n)
 
