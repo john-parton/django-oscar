@@ -3,6 +3,7 @@ from django.test import TestCase
 from oscar.apps.offer import models
 from oscar.apps.catalogue import models as catalogue_models
 from oscar.test.factories import create_product
+from oscar.test import factories
 
 
 class TestWholeSiteRange(TestCase):
@@ -10,18 +11,18 @@ class TestWholeSiteRange(TestCase):
     def setUp(self):
         self.range = models.Range.objects.create(
             name="All products", includes_all_products=True)
-        self.prod = create_product()
+        self.parent, __, __ = factories.create_product_heirarchy()
 
     def test_all_products_range(self):
-        self.assertTrue(self.range.contains_product(self.prod))
+        self.assertTrue(self.range.contains_product(self.parent))
 
     def test_whitelisting(self):
-        self.range.add_product(self.prod)
-        self.assertTrue(self.range.contains_product(self.prod))
+        self.range.add_product(self.parent)
+        self.assertTrue(self.range.contains_product(self.parent))
 
     def test_blacklisting(self):
-        self.range.excluded_products.add(self.prod)
-        self.assertFalse(self.range.contains_product(self.prod))
+        self.range.excluded_products.add(self.parent)
+        self.assertFalse(self.range.contains_product(self.parent))
 
 
 class TestChildRange(TestCase):
@@ -29,19 +30,11 @@ class TestChildRange(TestCase):
     def setUp(self):
         self.range = models.Range.objects.create(
             name='Child-specific range', includes_all_products=False)
-        self.parent = create_product(structure='parent')
-        self.child1 = create_product(structure='child', parent=self.parent)
-        self.child2 = create_product(structure='child', parent=self.parent)
-        self.range.add_product(self.child1)
+        self.parent, self.child, __  = factories.create_product_heirarchy()
+        self.range.add_product(self.parent)
 
     def test_includes_child(self):
-        self.assertTrue(self.range.contains_product(self.child1))
-
-    def test_does_not_include_parent(self):
-        self.assertFalse(self.range.contains_product(self.parent))
-
-    def test_does_not_include_sibling(self):
-        self.assertFalse(self.range.contains_product(self.child2))
+        self.assertTrue(self.range.contains_product(self.child))
 
 
 class TestPartialRange(TestCase):
@@ -49,15 +42,14 @@ class TestPartialRange(TestCase):
     def setUp(self):
         self.range = models.Range.objects.create(
             name="All products", includes_all_products=False)
-        self.parent = create_product(structure='parent')
-        self.child = create_product(structure='child', parent=self.parent)
+        self.parent, self.child, __ = factories.create_product_heirarchy()
 
     def test_empty_list(self):
         self.assertFalse(self.range.contains_product(self.parent))
         self.assertFalse(self.range.contains_product(self.child))
 
     def test_included_classes(self):
-        self.range.classes.add(self.parent.get_product_class())
+        self.range.classes.add(self.parent.product_class)
         self.assertTrue(self.range.contains_product(self.parent))
         self.assertTrue(self.range.contains_product(self.child))
 
@@ -67,15 +59,19 @@ class TestPartialRange(TestCase):
         self.assertTrue(self.range.contains_product(self.child))
 
     def test_included_class_with_exception(self):
-        self.range.classes.add(self.parent.get_product_class())
+        self.range.classes.add(self.parent.product_class)
         self.range.excluded_products.add(self.parent)
         self.assertFalse(self.range.contains_product(self.parent))
         self.assertFalse(self.range.contains_product(self.child))
 
     def test_included_excluded_products_in_all_products(self):
         count = 5
-        included_products = [create_product() for _ in range(count)]
-        excluded_products = [create_product() for _ in range(count)]
+        included_products, excluded_products = [], []
+        for __ in range(count):
+            included, __, __ = factories.create_product_heirarchy()
+            included_products.append(included)
+            excluded, __, __ = factories.create_product_heirarchy()
+            excluded_products.add(excluded)
 
         for product in included_products:
             models.RangeProduct.objects.create(
@@ -88,10 +84,10 @@ class TestPartialRange(TestCase):
         self.assertEqual(self.range.num_products(), count)
 
         for product in included_products:
-            self.assertTrue(product in all_products)
+            self.assertIn(product, all_products)
 
         for product in excluded_products:
-            self.assertTrue(product not in all_products)
+            self.assertNotIn(product, all_products)
 
     def test_product_classes_in_all_products(self):
         product_in_included_class = create_product(product_class="123")

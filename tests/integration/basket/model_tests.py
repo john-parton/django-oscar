@@ -62,9 +62,7 @@ class TestANonEmptyBasket(TestCase):
             self.product, record))
 
     def test_returns_zero_line_quantity_for_missing_product_and_stockrecord(self):
-        product = factories.create_product()
-        record = factories.create_stockrecord(
-            product, price_excl_tax=D('5.00'))
+        __, product, record = factories.create_product_heirarchy(price_excl_tax=D('5.00'))
         self.assertEqual(0, self.basket.line_quantity(
             product, record))
 
@@ -83,9 +81,8 @@ class TestANonEmptyBasket(TestCase):
 class TestMergingTwoBaskets(TestCase):
 
     def setUp(self):
-        self.product = factories.create_product()
-        self.record = factories.create_stockrecord(
-            self.product, price_excl_tax=D('10.00'))
+        __, self.product, self.record = \
+            factories.create_product_heirarchy(price_excl_tax=D('10.00'))
         self.purchase_info = factories.create_purchase_info(self.record)
 
         self.main_basket = Basket()
