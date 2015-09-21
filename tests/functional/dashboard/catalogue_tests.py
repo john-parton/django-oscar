@@ -160,8 +160,9 @@ class TestANonStaffUser(TestAStaffUser):
         self.partner.users.add(self.user)
 
     def test_can_list_her_products(self):
-        product1, __, __ = factories.create_product_heirarchy(partner_name="A", partner_users=[self.user])
-        product2, __, __ = factories.create_product_heirarchy((partner_name="B", partner_users=[])
+        product1, __, __ = factories.create_product_heirarchy(partner_name="A", 
+                                                              partner_users=[self.user])
+        product2, __, __ = factories.create_product_heirarchy(partner_name="B", partner_users=[])
         page = self.get(reverse('dashboard:catalogue-product-list'))
         products_on_page = [row.record for row
                             in page.context['products'].page.object_list]

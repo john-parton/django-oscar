@@ -4,6 +4,7 @@ from oscar.test import factories
 from oscar.test.testcases import WebTestCase
 from oscar.core.compat import get_user_model
 from oscar.apps.catalogue.models import ChildProduct, Product
+from oscar.apps.dashboard.catalogue.forms import ProductForm
 from oscar.test.factories import (
     CategoryFactory, ProductFactory, ProductClassFactory)
 
@@ -70,10 +71,10 @@ class TestCreateParentProduct(ProductWebTest):
         return product_form.submit()
 
     def test_title_is_required(self):
-        response = self.submit(title='')
+        form = ProductForm({'title': ''}, product_class=self.pclass)
 
-        self.assertContains(response, "must have a title")
-        self.assertEqual(Product.objects.count(), 0)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors['title'], ['This field is required.'])
 
     def test_requires_a_category(self):
         response = self.submit(title="Nice T-Shirt")
