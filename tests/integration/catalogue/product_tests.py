@@ -3,9 +3,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 
-from oscar.apps.catalogue.models import (ChildProduct, Product, ProductClass,
-                                         ProductAttribute,
-                                         AttributeOption)
+from oscar.apps.catalogue.models import (ChildProduct, Product, ProductClass, AttributeOption)
 from oscar.test import factories
 from oscar.test.decorators import ignore_deprecation_warnings
 
@@ -19,13 +17,9 @@ class ProductTests(TestCase):
 
 class TopLevelProductTests(ProductTests):
 
-    def test_top_level_products_must_have_titles(self):
-        product = Product(product_class=self.product_class)
-        self.assertRaises(ValidationError, product.clean)
-
     def test_top_level_products_must_have_product_class(self):
         product = Product(title=u"Kopfhörer")
-        self.assertRaises(ValidationError, product.clean)
+        self.assertRaises(IntegrityError, product.save)
 
 
 class ChildProductTests(ProductTests):
@@ -38,7 +32,7 @@ class ChildProductTests(ProductTests):
             is_discountable=False)
 
     def test_create_child_products_with_attributes(self):
-        product = ChildProduct(upc='1234', title='testing')
+        product = ChildProduct(parent=self.parent, upc='1234', title='testing')
         product.attr.num_pages = 100
         product.save()
 
@@ -56,19 +50,7 @@ class ChildProductTests(ProductTests):
             ChildProduct.objects.create(parent=self.parent, title='testing', upc=None)
 
     def test_child_products_dont_need_titles(self):
-        Product.objects.create(parent=self.parent, title='')
-
-    @ignore_deprecation_warnings
-    def test_have_a_minimum_price(self):
-        self.assertIsNone(self.parent.min_child_price_excl_tax)
-        factories.ProductFactory(
-            parent=self.parent, structure=Product.CHILD,
-            stockrecords__price_excl_tax=5)
-        self.assertEqual(5, self.parent.min_child_price_excl_tax)
-        factories.ProductFactory(
-            parent=self.parent, structure=Product.CHILD,
-            stockrecords__price_excl_tax=3)
-        self.assertEqual(3, self.parent.min_child_price_excl_tax)
+        ChildProduct.objects.create(parent=self.parent, title='')
 
 
 class TestAChildProduct(TestCase):
