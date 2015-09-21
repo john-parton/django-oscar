@@ -196,7 +196,7 @@ class TestANonStaffUser(TestAStaffUser):
     def test_can_update_a_product_without_stockrecord(self):
         pass
 
-    def test_can_create_product_with_required_attributes(self):
+    def test_can_create_child_product_with_required_attributes(self):
         pass
 
     # Tests below can't work because child products aren't supported with the
@@ -209,6 +209,9 @@ class TestANonStaffUser(TestAStaffUser):
         pass
 
     def test_can_create_a_child_product(self):
+        pass
+    
+    def test_can_create_and_continue_editing_a_product(self):
         pass
 
     def test_cant_create_child_product_for_invalid_parents(self):

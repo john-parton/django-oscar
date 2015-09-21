@@ -55,7 +55,7 @@ class TestIndexView(CheckoutMixin, WebTestCase):
     def test_redirects_customers_with_invalid_basket(self):
         # Add product to basket but then remove its stock so it is not
         # purchasable.
-        product = factories.ProductFactory()
+        __, product, __ = factories.create_product_heirarchy(num_in_stock=10)
         self.add_product_to_basket(product)
         product.stockrecords.all().update(num_in_stock=0)
 
