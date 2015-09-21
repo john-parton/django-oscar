@@ -3,6 +3,7 @@ from django.test import TestCase
 from oscar.apps.dashboard.ranges import forms
 from oscar.test.factories import create_product
 from oscar.apps.offer.models import Range
+from oscar.test import factories
 
 
 class RangeProductFormTests(TestCase):
@@ -50,9 +51,9 @@ class RangeProductFormTests(TestCase):
         self.assertFalse(form.is_valid())
 
     def test_dupe_skus_are_available(self):
-        product = create_product(partner_sku='123123')
-        create_product(partner_sku='123124')
-        self.range.add_product(product)
+        parent, __, __ = factories.create_product_heirarchy(partner_sku='123123')
+        self.range.add_product(parent)
         form = self.submit_form({'query': '123123, 123124'})
-        self.assertTrue(form.is_valid())
+        form.is_valid()
+        self.assertFalse(form.is_valid())
         self.assertTrue('123123' in form.get_duplicate_skus())

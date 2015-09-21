@@ -50,13 +50,18 @@ class RangeProductForm(forms.Form):
 
         products = self.range.included_products.all()
 
-        existing_skus = set(products.values_list(
-            'children__stockrecords__partner_sku', flat=True))
-        existing_upcs = set(products.values_list('children__upc', flat=True))
+        existing_ids = set()
 
-        existing_ids = existing_skus.union(existing_upcs)
+        for sku, upc in products.values_list('children__stockrecords__partner_sku', 
+                                             'children__upc').order_by().distinct():
+            if sku:
+                existing_ids.add(sku)
+            if upc:
+                existing_ids.add(upc)
 
         new_ids = ids - existing_ids
+
+        self.duplicate_skus = existing_ids.intersection(ids)
 
         if len(new_ids) == 0:
             raise forms.ValidationError(
@@ -76,7 +81,6 @@ class RangeProductForm(forms.Form):
         found_upcs = set(self.products.values_list('children__upc', flat=True))
         found_ids = found_skus.union(found_upcs)
         self.missing_skus = new_ids - found_ids
-        self.duplicate_skus = existing_ids.intersection(ids)
 
         return raw
 
