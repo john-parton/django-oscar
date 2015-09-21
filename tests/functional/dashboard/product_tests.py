@@ -97,22 +97,6 @@ class TestCreateChildProduct(ProductWebTest):
         self.parent = ProductFactory(structure='parent', stockrecords=[])
         super(TestCreateChildProduct, self).setUp()
 
-    def test_categories_are_not_required(self):
-        url = reverse('dashboard:catalogue-child-product-create',
-                      kwargs={'parent_pk': self.parent.pk})
-        page = self.get(url)
-
-        product_form = page.form
-        product_form['title'] = expected_title = 'Nice T-Shirt'
-        product_form.submit()
-
-        try:
-            product = Product.objects.get(title=expected_title)
-        except Product.DoesNotExist:
-            self.fail('creating a child product did not work')
-
-        self.assertEqual(product.parent, self.parent)
-
     def test_doesnt_allow_duplicate_upc(self):
         factories.ChildProductFactory(upc="12345")
         category = CategoryFactory()
