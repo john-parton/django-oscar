@@ -1,12 +1,13 @@
-from django.core.urlresolvers import reverse
-from oscar.test import factories
+from __future__ import unicode_literals
 
+from django.core.urlresolvers import reverse
+
+from oscar.test import factories
 from oscar.test.testcases import WebTestCase
 from oscar.core.compat import get_user_model
 from oscar.apps.catalogue.models import ChildProduct, Product
 from oscar.apps.dashboard.catalogue.forms import ProductForm
-from oscar.test.factories import (
-    CategoryFactory, ProductFactory, ProductClassFactory)
+from oscar.test.factories import (CategoryFactory, ProductClassFactory)
 
 User = get_user_model()
 
@@ -92,22 +93,24 @@ class TestCreateParentProduct(ProductWebTest):
 class TestCreateChildProduct(ProductWebTest):
     is_staff = True
 
-    def setUp(self):
-        self.pclass = ProductClassFactory(name='Books', slug='books')
-        self.parent = ProductFactory(structure='parent', stockrecords=[])
-        super(TestCreateChildProduct, self).setUp()
+    def test_disallow_duplicate_upc(self):
+        parent, child1, __ = factories.create_product_heirarchy()
+        child1.upc = '12345'
+        child1.title = 'Nice T-Shirt'
+        child1.save() 
 
-    def test_doesnt_allow_duplicate_upc(self):
-        factories.ChildProductFactory(upc="12345")
-        category = CategoryFactory()
-        self.assertTrue(ChildProduct.objects.get(upc="12345"))
+        url = reverse('dashboard:catalogue-child-product-create',
+                      kwargs={'parent_pk':parent.pk})
 
-        response = self.submit(title="Nice T-Shirt", category=category,
-                               upc="12345")
+        child_product_form = self.get(url).form
 
-        self.assertEqual(Product.objects.count(), 1)
-        self.assertNotEqual(Product.objects.get(upc='12345').title,
-                            'Nice T-Shirt')
+        child_product_form['upc'] = '12345'
+        child_product_form['title'] = 'Another Nice T-Shirt'
+
+        response = child_product_form.submit()
+
+        self.assertEqual(ChildProduct.objects.count(), 1)
+        self.assertEqual(ChildProduct.objects.get(upc='12345').title, 'Nice T-Shirt')
         self.assertContains(response,
                             "Product with this UPC already exists.")
 
