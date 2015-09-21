@@ -58,21 +58,6 @@ class ChildProductTests(ProductTests):
     def test_child_products_dont_need_titles(self):
         Product.objects.create(parent=self.parent, title='')
 
-    def test_child_products_inherit_fields(self):
-        p = Product.objects.create(
-            parent=self.parent,
-            structure=Product.CHILD,
-            is_discountable=True)
-        self.assertEqual("Parent product", p.get_title())
-        self.assertEqual("Clothing", p.get_product_class().name)
-        self.assertEqual(False, p.get_is_discountable())
-
-    def test_child_products_are_not_part_of_browsable_set(self):
-        Product.objects.create(
-            product_class=self.product_class, parent=self.parent,
-            structure=Product.CHILD)
-        self.assertEqual(set([self.parent]), set(Product.browsable.all()))
-
     @ignore_deprecation_warnings
     def test_have_a_minimum_price(self):
         self.assertIsNone(self.parent.min_child_price_excl_tax)
