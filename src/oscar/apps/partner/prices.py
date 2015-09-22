@@ -1,6 +1,8 @@
+from functools import total_ordering
+
 from oscar.core import prices
 
-
+@total_ordering
 class Base(object):
     """
     The interface that any pricing policy must support
@@ -35,6 +37,12 @@ class Base(object):
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+    def __lt__(self, other):
+        return self.effective_price < other.effective_price
+
+    def __eq__(self, other):
+        return self.effective_price == other.effective_price
 
 
 class Unavailable(Base):
