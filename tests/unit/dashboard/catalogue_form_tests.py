@@ -9,11 +9,11 @@ class TestCreateProductForm(TestCase):
     def setUp(self):
         self.product_class = factories.ProductClassFactory()
 
-    def submit(self, data, parent=None):
-        return forms.ProductForm(self.product_class, parent=parent, data=data)
+    def submit(self, data):
+        return forms.ProductForm(product_class=self.product_class, data=data)
 
     def test_validates_that_parent_products_must_have_title(self):
-        form = self.submit()
+        form = self.submit({})
         self.assertFalse(form.is_valid())
         form = self.submit({'title': 'foo'})
         self.assertTrue(form.is_valid())
@@ -23,14 +23,13 @@ class TestCreateChildForm(TestCase):
 
     def setUp(self):
         self.product_class = factories.ProductClassFactory()
+        self.parent = factories.ProductFactory(product_class=self.product_class)
     
     def submit(self, data):
-        return forms.ChildProduct(self.product_class, data=data)
+        return forms.ChildProductForm(product_class=self.product_class, parent=self.parent, data=data)
 
     def test_validates_that_child_products_dont_need_a_title(self):
-        parent = factories.ProductFactory(
-            product_class=self.product_class)
-        form = self.submit()
+        form = self.submit({})
         self.assertTrue(form.is_valid())
 
 

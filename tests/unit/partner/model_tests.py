@@ -14,8 +14,8 @@ class TestStockRecord(TestCase):
 
     def setUp(self):
         self.product = factories.create_product()
-        self.stockrecord = factories.create_stockrecord(
-            self.product, price_excl_tax=D('10.00'), num_in_stock=10)
+        __, self.product, self.stockrecord = \
+            factories.create_product_heirarchy(price_excl_tax=D('10.00'), num_in_stock=10)
 
     def test_get_price_excl_tax_returns_correct_value(self):
         self.assertEqual(D('10.00'), self.stockrecord.price_excl_tax)

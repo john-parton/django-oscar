@@ -5,7 +5,7 @@ import logging
 
 from oscar.apps.partner.importers import CatalogueImporter
 from oscar.apps.partner.exceptions import ImportingError
-from oscar.apps.catalogue.models import ProductClass, Product
+from oscar.apps.catalogue.models import ChildProduct, ProductClass, Product
 from oscar.apps.partner.models import Partner
 from oscar.test.factories import create_product
 
@@ -56,7 +56,7 @@ class ImportSmokeTest(TestCase):
     def setUp(self):
         self.importer = CatalogueImporter(logger)
         self.importer.handle(TEST_BOOKS_CSV)
-        self.product = Product.objects.get(upc='9780115531446')
+        self.product = ChildProduct.objects.get(upc='9780115531446')
 
     def test_all_rows_are_imported(self):
         self.assertEqual(10, Product.objects.all().count())
@@ -72,12 +72,12 @@ class ImportSmokeTest(TestCase):
 
     def test_item_is_created(self):
         try:
-            Product.objects.get(upc="9780115531446")
+            ChildProduct.objects.get(upc="9780115531446")
         except Product.DoesNotExist:
             self.fail()
 
     def test_title_is_imported(self):
-        self.assertEqual("Prepare for Your Practical Driving Test", self.product.title)
+        self.assertEqual("Prepare for Your Practical Driving Test", self.product.parent.title)
 
     def test_partner_is_created(self):
         try:
@@ -92,7 +92,7 @@ class ImportSmokeTest(TestCase):
             self.fail()
 
     def test_null_fields_are_skipped(self):
-        self.assertEqual("", self.product.description)
+        self.assertEqual("", self.product.parent.description)
 
     def test_price_is_imported(self):
         stockrecord = self.product.stockrecords.all()[0]
@@ -123,5 +123,5 @@ class ImportWithFlushTest(TestCase):
 
         self.importer.handle(TEST_BOOKS_CSV)
 
-        with self.assertRaises(Product.DoesNotExist):
-            Product.objects.get(upc=upc)
+        with self.assertRaises(ChildProduct.DoesNotExist):
+            ChildProduct.objects.get(upc=upc)

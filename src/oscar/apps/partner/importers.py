@@ -13,8 +13,8 @@ from oscar.core.compat import UnicodeCSVReader
 ImportingError = get_class('partner.exceptions', 'ImportingError')
 Partner, StockRecord = get_classes('partner.models', ['Partner',
                                                       'StockRecord'])
-ProductClass, Product, Category, ProductCategory = get_classes(
-    'catalogue.models', ('ProductClass', 'Product', 'Category',
+ProductClass, ChildProduct, Product, Category, ProductCategory = get_classes(
+    'catalogue.models', ('ProductClass', 'ChildProduct', 'Product', 'Category',
                          'ProductCategory'))
 
 
@@ -44,6 +44,7 @@ class CatalogueImporter(object):
     def _flush_product_data(self):
         u"""Flush out product and stock models"""
         Product.objects.all().delete()
+        ChildProduct.objects.all().delete()
         ProductClass.objects.all().delete()
         Partner.objects.all().delete()
         StockRecord.objects.all().delete()
@@ -84,20 +85,26 @@ class CatalogueImporter(object):
         product_class, __ \
             = ProductClass.objects.get_or_create(name=product_class)
         try:
-            item = Product.objects.get(upc=upc)
+            item = ChildProduct.objects.get(upc=upc)
+            parent = item.parent
             stats['updated_items'] += 1
-        except Product.DoesNotExist:
-            item = Product()
+        except ChildProduct.DoesNotExist:
+            item = ChildProduct()
+            parent = Product(product_class=product_class)
             stats['new_items'] += 1
+
+        parent.title = title
+        parent.description = description
+        parent.product_class = product_class
+        parent.save()
+
+        item.parent = parent
         item.upc = upc
-        item.title = title
-        item.description = description
-        item.product_class = product_class
         item.save()
 
         # Category
         cat = create_from_breadcrumbs(category_str)
-        ProductCategory.objects.create(product=item, category=cat)
+        ProductCategory.objects.create(product=item.parent, category=cat)
 
         return item
 
