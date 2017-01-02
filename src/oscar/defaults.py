@@ -1,6 +1,7 @@
 from collections import OrderedDict
-from django.utils.translation import ugettext_lazy as _
+
 from django.core.urlresolvers import reverse_lazy
+from django.utils.translation import ugettext_lazy as _
 
 OSCAR_SHOP_NAME = 'Oscar'
 OSCAR_SHOP_TAGLINE = ''
@@ -86,6 +87,7 @@ OSCAR_FROM_EMAIL = 'oscar@example.com'
 OSCAR_SLUG_FUNCTION = 'oscar.core.utils.default_slugifier'
 OSCAR_SLUG_MAP = {}
 OSCAR_SLUG_BLACKLIST = []
+OSCAR_SLUG_ALLOW_UNICODE = False
 
 # Cookies
 OSCAR_COOKIES_DELETE_ON_LOGOUT = ['oscar_recently_viewed_products', ]
@@ -245,6 +247,8 @@ OSCAR_SEARCH_FACETS = {
     ]),
 }
 
+
+OSCAR_PROMOTIONS_ENABLED = True
 OSCAR_PRODUCT_SEARCH_HANDLER = None
 
 OSCAR_SETTINGS = dict(

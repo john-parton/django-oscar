@@ -20,12 +20,11 @@ Contents:
     :target: http://oscarcommerce.com
 
 .. image:: https://github.com/django-oscar/django-oscar/raw/master/docs/images/screenshots/readthedocs.thumb.png
-    :target: http://django-oscar.readthedocs.org/en/latest/
+    :target: https://django-oscar.readthedocs.io/en/latest/
 
 Further reading:
 
 * `Official homepage`_
-* `Demo site`_ (a reference build of an Oscar project)
 * `Sandbox site`_ (an hourly build of the unstable master branch - it's
   experimental but feel free to explore and get a feel for the base Oscar
   install.)
@@ -43,16 +42,17 @@ Continuous integration status:
 .. image:: https://travis-ci.org/django-oscar/django-oscar.svg?branch=master
     :target: https://travis-ci.org/django-oscar/django-oscar
 
-.. image:: https://coveralls.io/repos/django-oscar/django-oscar/badge.png?branch=master
+.. image:: http://codecov.io/github/django-oscar/django-oscar/coverage.svg?branch=master
     :alt: Coverage
-    :target: https://coveralls.io/r/django-oscar/django-oscar
+    :target: http://codecov.io/github/django-oscar/django-oscar?branch=master
+
+.. image:: https://requires.io/github/django-oscar/django-oscar/requirements.svg?branch=master
+     :target: https://requires.io/github/django-oscar/django-oscar/requirements/?branch=master
+     :alt: Requirements Status
 
 PyPI status:
 
-.. image:: https://pypip.in/v/django-oscar/badge.png
-    :target: https://pypi.python.org/pypi/django-oscar/
-
-.. image:: https://pypip.in/d/django-oscar/badge.png
+.. image:: https://img.shields.io/pypi/v/django-oscar.svg
     :target: https://pypi.python.org/pypi/django-oscar/
 
 Docs status:
@@ -63,8 +63,7 @@ Docs status:
 
 .. _`Official homepage`: http://oscarcommerce.com
 .. _`Sandbox site`: http://latest.oscarcommerce.com
-.. _`Demo site`: http://demo.oscarcommerce.com
-.. _`Documentation`: http://django-oscar.readthedocs.org/en/latest/
+.. _`Documentation`: https://django-oscar.readthedocs.io/en/latest/
 .. _`readthedocs.org`: http://readthedocs.org
 .. _`Continuous integration homepage`: http://travis-ci.org/#!/django-oscar/django-oscar
 .. _`travis-ci.org`: http://travis-ci.org/
@@ -99,7 +98,7 @@ These are screenshots from the 'sandbox' example site that ships with
 Oscar.  It sports a simple design built with Twitter's Bootstrap_ and provides a
 good starting point for rapidly building elegant e-commerce sites.
 
-.. _Bootstrap: http://twitter.github.com/bootstrap/
+.. _Bootstrap: https://getbootstrap.com/
 
 .. image:: https://github.com/django-oscar/django-oscar/raw/master/docs/images/screenshots/browse.thumb.png
     :target: https://github.com/django-oscar/django-oscar/raw/master/docs/images/screenshots/browse.png
@@ -121,26 +120,9 @@ The sandbox site can be set-up locally `in 5 commands`_.  Want to
 make changes?  Check out the `contributing guidelines`_.
 
 .. _`this gateway page`: http://latest.oscarcommerce.com/gateway/
-.. _`in 5 commands`: http://django-oscar.readthedocs.org/en/latest/internals/sandbox.html#running-the-sandbox-locally
-.. _`contributing guidelines`: http://django-oscar.readthedocs.org/en/latest/internals/contributing/index.html
+.. _`in 5 commands`: https://django-oscar.readthedocs.io/en/latest/internals/sandbox.html#running-the-sandbox-locally
+.. _`contributing guidelines`: https://django-oscar.readthedocs.io/en/latest/internals/contributing/index.html
 
-Demo
-~~~~
-
-Oscar also ships with a demo site, which is a reference build of an Oscar
-project.  It integrates with Oscar's stores_, PayPal_ and Datacash_ extensions.
-
-.. image:: https://github.com/django-oscar/django-oscar/raw/master/docs/images/screenshots/demo.home.thumb.png
-    :target: https://github.com/django-oscar/django-oscar/raw/master/docs/images/screenshots/demo.home.png
-
-.. image:: https://github.com/django-oscar/django-oscar/raw/master/docs/images/screenshots/demo.browse.thumb.png
-    :target: https://github.com/django-oscar/django-oscar/raw/master/docs/images/screenshots/demo.browse.png
-
-The demo site is also available to browse at
-http://demo.oscarcommerce.com
-
-.. _stores: https://github.com/django-oscar/django-oscar-stores
-.. _PayPal: https://github.com/django-oscar/django-oscar-paypal
 
 Extensions
 ----------
@@ -175,7 +157,7 @@ The following extensions are stable and ready for use:
 .. _django-oscar-accounts: https://github.com/django-oscar/django-oscar-accounts
 .. _django-oscar-easyrec: https://github.com/django-oscar/django-oscar-easyrec
 .. _EasyRec: http://easyrec.org/
-.. _django-oscar-eway: https://github.com/django-oscar/django-oscar-eway
+.. _django-oscar-eway: https://github.com/snowball-one/django-oscar-eway
 .. _django-oscar-stores: https://github.com/django-oscar/django-oscar-stores
 .. _django-oscar-sagepay-direct: https://github.com/django-oscar/django-oscar-sagepay-direct
 .. _eWay: https://www.eway.com.au
@@ -185,6 +167,7 @@ The following are community-written extensions:
 * django-oscar-payments_ - Pluggable payments for Oscar
 * django-oscar-recurly_ - Integration with the Recurly payment gateway
 * django-oscar-adyen_ - Integration with the Adyen payment gateway
+* django-oscar-przelewy24_ - Integration with the Przelewy24 payment gateway
 * oscar-sagepay_ - Payment integration with Sage Pay
 * django-oscar-erp_
 
@@ -195,6 +178,7 @@ Let us know if you're writing a new one!
 .. _django-oscar-payments: https://github.com/Lacrymology/django-oscar-payments
 .. _django-oscar-recurly: https://github.com/mynameisgabe/django-oscar-recurly
 .. _django-oscar-adyen: https://github.com/oscaro/django-oscar-adyen
+.. _django-oscar-przelewy24: https://github.com/kisiel/django-oscar-przelewy24
 .. _oscar-sagepay: https://github.com/udox/oscar-sagepay
 
 License

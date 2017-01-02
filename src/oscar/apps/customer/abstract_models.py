@@ -1,4 +1,3 @@
-from django.utils import six
 import hashlib
 import random
 
@@ -7,9 +6,9 @@ from django.contrib.auth import models as auth_models
 from django.core.urlresolvers import reverse
 from django.core.validators import RegexValidator
 from django.db import models
-from django.template import Template, Context, TemplateDoesNotExist
+from django.template import Context, Template, TemplateDoesNotExist
 from django.template.loader import get_template
-from django.utils import timezone
+from django.utils import six, timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
@@ -95,7 +94,7 @@ class AbstractUser(auth_models.AbstractBaseUser,
         ProductAlert = self.alerts.model
         alerts = ProductAlert.objects.filter(
             email=self.email, status=ProductAlert.ACTIVE)
-        alerts.update(user=self, key=None, email=None)
+        alerts.update(user=self, key='', email='')
 
     def save(self, *args, **kwargs):
         super(AbstractUser, self).save(*args, **kwargs)
@@ -133,7 +132,7 @@ class AbstractEmail(models.Model):
 @python_2_unicode_compatible
 class AbstractCommunicationEventType(models.Model):
     """
-    A 'type' of communication.  Like a order confirmation email.
+    A 'type' of communication.  Like an order confirmation email.
     """
 
     #: Code used for looking up this event programmatically.
@@ -313,9 +312,7 @@ class AbstractProductAlert(models.Model):
     user = models.ForeignKey(AUTH_USER_MODEL, db_index=True, blank=True,
                              null=True, related_name="alerts",
                              verbose_name=_('User'))
-    # TODO Remove the max_length kwarg when support for Django 1.7 is dropped
-    email = models.EmailField(_("Email"), db_index=True, blank=True,
-                              max_length=75)
+    email = models.EmailField(_("Email"), db_index=True, blank=True)
 
     # This key are used to confirm and cancel alerts for anon users
     key = models.CharField(_("Key"), max_length=128, blank=True, db_index=True)

@@ -1,13 +1,12 @@
 from decimal import Decimal as D
 
-from django.contrib.sites.models import Site
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 
-from oscar.core.loading import get_model
-from oscar.core.loading import get_class
-from . import exceptions
+from oscar.core.loading import get_class, get_model
 
+from . import exceptions
 
 Order = get_model('order', 'Order')
 Line = get_model('order', 'Line')
@@ -102,7 +101,6 @@ class OrderCreator(object):
         """
         order_data = {'basket': basket,
                       'number': order_number,
-                      'site': Site._default_manager.get_current(),
                       'currency': total.currency,
                       'total_incl_tax': total.incl_tax,
                       'total_excl_tax': total.excl_tax,
@@ -120,6 +118,8 @@ class OrderCreator(object):
             order_data['status'] = status
         if extra_order_fields:
             order_data.update(extra_order_fields)
+        if 'site' not in order_data:
+            order_data['site'] = Site._default_manager.get_current()
         order = Order(**order_data)
         order.save()
         return order

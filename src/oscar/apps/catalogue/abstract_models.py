@@ -1,36 +1,38 @@
-import os
-from django.utils import six
-from datetime import datetime, date
 import logging
+import os
+from datetime import date, datetime
 
-from django.utils.html import strip_tags
-from django.utils.safestring import mark_safe
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.staticfiles.finders import find
 from django.core.cache import cache
-from django.core.exceptions import ValidationError, ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.files.base import File
 from django.core.urlresolvers import reverse
 from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models import Sum, Count
+from django.db.models import Count, Sum
+from django.utils import six
 from django.utils.encoding import python_2_unicode_compatible
-from django.utils.translation import ugettext_lazy as _, pgettext_lazy
 from django.utils.functional import cached_property
-from django.contrib.contenttypes.generic import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-
+from django.utils.html import strip_tags
+from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import get_language, pgettext_lazy
 from treebeard.mp_tree import MP_Node
 
 from oscar.core.decorators import deprecated
+from oscar.core.loading import get_class, get_classes, get_model
 from oscar.core.utils import slugify
 from oscar.core.validators import non_python_keyword
-from oscar.core.loading import get_classes, get_model, get_class
-from oscar.models.fields import NullCharField, AutoSlugField
+from oscar.models.fields import AutoSlugField, NullCharField
+from oscar.models.fields.slugfield import SlugField
 
 ProductManager, BrowsableProductManager = get_classes(
     'catalogue.managers', ['ProductManager', 'BrowsableProductManager'])
-
+ProductAttributesContainer = get_class(
+    'catalogue.product_attributes', 'ProductAttributesContainer')
 Selector = get_class('partner.strategy', 'Selector')
 
 
@@ -92,7 +94,7 @@ class AbstractCategory(MP_Node):
     description = models.TextField(_('Description'), blank=True)
     image = models.ImageField(_('Image'), upload_to='categories', blank=True,
                               null=True, max_length=255)
-    slug = models.SlugField(_('Slug'), max_length=255, db_index=True)
+    slug = SlugField(_('Slug'), max_length=255, db_index=True)
 
     _slug_separator = '/'
     _full_name_separator = ' > '
@@ -194,7 +196,8 @@ class AbstractCategory(MP_Node):
         you change that logic, you'll have to reconsider the caching
         approach.
         """
-        cache_key = 'CATEGORY_URL_%s' % self.pk
+        current_locale = get_language()
+        cache_key = 'CATEGORY_URL_%s_%s' % (current_locale, self.pk)
         url = cache.get(cache_key)
         if not url:
             url = reverse(
@@ -675,8 +678,7 @@ class AbstractProduct(models.Model):
 
     @cached_property
     def num_approved_reviews(self):
-        return self.reviews.filter(
-            status=self.reviews.model.APPROVED).count()
+        return self.reviews.approved().count()
 
 
 class AbstractProductRecommendation(models.Model):
@@ -702,72 +704,6 @@ class AbstractProductRecommendation(models.Model):
         verbose_name_plural = _('Product recomendations')
 
 
-class ProductAttributesContainer(object):
-    """
-    Stolen liberally from django-eav, but simplified to be product-specific
-
-    To set attributes on a product, use the `attr` attribute:
-
-        product.attr.weight = 125
-    """
-
-    def __setstate__(self, state):
-        self.__dict__ = state
-        self.initialised = False
-
-    def __init__(self, product):
-        self.product = product
-        self.initialised = False
-
-    def __getattr__(self, name):
-        if not name.startswith('_') and not self.initialised:
-            values = self.get_values().select_related('attribute')
-            for v in values:
-                setattr(self, v.attribute.code, v.value)
-            self.initialised = True
-            return getattr(self, name)
-        raise AttributeError(
-            _("%(obj)s has no attribute named '%(attr)s'") % {
-                'obj': self.product.get_product_class(), 'attr': name})
-
-    def validate_attributes(self):
-        for attribute in self.get_all_attributes():
-            value = getattr(self, attribute.code, None)
-            if value is None:
-                if attribute.required:
-                    raise ValidationError(
-                        _("%(attr)s attribute cannot be blank") %
-                        {'attr': attribute.code})
-            else:
-                try:
-                    attribute.validate_value(value)
-                except ValidationError as e:
-                    raise ValidationError(
-                        _("%(attr)s attribute %(err)s") %
-                        {'attr': attribute.code, 'err': e})
-
-    def get_values(self):
-        return self.product.attribute_values.all()
-
-    def get_value_by_attribute(self, attribute):
-        return self.get_values().get(attribute=attribute)
-
-    def get_all_attributes(self):
-        return self.product.get_product_class().attributes.all()
-
-    def get_attribute_by_code(self, code):
-        return self.get_all_attributes().get(code=code)
-
-    def __iter__(self):
-        return iter(self.get_values())
-
-    def save(self):
-        for attribute in self.get_all_attributes():
-            if hasattr(self, attribute.code):
-                value = getattr(self, attribute.code)
-                attribute.save_value(self.product, value)
-
-
 @python_2_unicode_compatible
 class AbstractProductAttribute(models.Model):
     """
@@ -785,7 +721,7 @@ class AbstractProductAttribute(models.Model):
                 regex=r'^[a-zA-Z_][0-9a-zA-Z_]*$',
                 message=_(
                     "Code can only contain the letters a-z, A-Z, digits, "
-                    "and underscores, and can't start with a digit")),
+                    "and underscores, and can't start with a digit.")),
             non_python_keyword
         ])
 
@@ -1074,6 +1010,7 @@ class AbstractAttributeOption(models.Model):
     class Meta:
         abstract = True
         app_label = 'catalogue'
+        unique_together = ('group', 'option')
         verbose_name = _('Attribute option')
         verbose_name_plural = _('Attribute options')
 

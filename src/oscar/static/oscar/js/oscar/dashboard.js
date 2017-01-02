@@ -7,10 +7,14 @@ var oscar = (function(o, $) {
         $.each(cookies, function(index, cookie) {
             cookieParts = $.trim(cookie).split('=');
             if (cookieParts[0] == 'csrftoken') {
-                csrfToken = cookieParts[1];
+                csrf_token = cookieParts[1];
             }
         });
-        return csrfToken;
+        // Extract from cookies fails for HTML-Only cookies
+        if (! csrf_token) {
+            csrf_token = $(document.forms.valueOf()).find('[name="csrfmiddlewaretoken"]')[0].value;
+        }
+        return csrf_token;
     };
 
     o.dashboard = {
@@ -28,6 +32,7 @@ var oscar = (function(o, $) {
                     menubar: false,
                     plugins: "link",
                     style_formats: [
+                        {title: 'Text', block: 'p'},
                         {title: 'Heading', block: 'h2'},
                         {title: 'Subheading', block: 'h3'}
                     ],
@@ -235,9 +240,9 @@ var oscar = (function(o, $) {
                 var option_group_select = $('#' + type_select.attr('id').replace('type', 'option_group'));
 
                 if(type_select.val() === 'option'){
-                    option_group_select.closest('.control-group').show();
+                    option_group_select.select2('container').show();
                 }else{
-                    option_group_select.closest('.control-group').hide();
+                    option_group_select.select2('container').hide();
                 }
             }
         },
@@ -245,8 +250,8 @@ var oscar = (function(o, $) {
             init: function() {
                 $('[data-behaviours~="remove"]').click(function() {
                     $this = $(this);
-                    $this.parents('table').find('input').attr('checked', false);
-                    $this.parents('tr').find('input').attr('checked', 'checked');
+                    $this.parents('table').find('input').prop('checked', false);
+                    $this.parents('tr').find('input').prop('checked', true);
                     $this.parents('form').submit();
                 });
             }
@@ -276,15 +281,13 @@ var oscar = (function(o, $) {
                 handle: '.btn-handle',
                 submit_url: '#'
             },
-            saveOrder = function(event, ui) {
+            saveOrder = function(data) {
                 // Get the csrf token, otherwise django will not accept the
                 // POST request.
-                var serial = $(this).sortable("serialize"),
-                    csrf = o.getCsrfToken();
-                serial = serial + '&csrfmiddlewaretoken=' + csrf;
+                var csrf = o.getCsrfToken();
                 $.ajax({
                     type: 'POST',
-                    data: serial,
+                    data: $.param(data),
                     dataType: "json",
                     url: options.submit_url,
                     beforeSend: function(xhr, settings) {
@@ -294,9 +297,27 @@ var oscar = (function(o, $) {
             },
             init = function(user_options) {
                 options = $.extend(options, user_options);
-                $(options.wrapper).sortable({
+                var group = $(options.wrapper).sortable({
+                    group: 'serialization',
+                    containerSelector: 'tbody',
+                    itemSelector: 'tr',
                     handle: options.handle,
-                    stop: saveOrder
+                    vertical: true,
+                    onDrop: function ($item, container, _super) {
+                        var data = group.sortable("serialize");
+                        saveOrder(data);
+                        _super($item, container);
+                    },
+                    placeholder: '<tr class="placeholder"/>',
+                    serialize: function (parent, children, isContainer) {
+                        if (isContainer) {
+                            return children;
+                        }
+                        else {
+                            var parts = parent.attr('id').split('_');
+                            return {'name': parts[0], 'value': parts[1]};
+                        }
+                    }
                 });
             };
 

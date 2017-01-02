@@ -1,13 +1,14 @@
 from datetime import timedelta
-from decimal import Decimal as D, ROUND_UP
+from decimal import Decimal as D
+from decimal import ROUND_UP
 
+from django.db.models import Avg, Count, Sum
 from django.utils.timezone import now
 from django.views.generic import TemplateView
-from oscar.core.loading import get_model
-from django.db.models import Avg, Sum, Count
 
-from oscar.core.compat import get_user_model
 from oscar.apps.promotions.models import AbstractPromotion
+from oscar.core.compat import get_user_model
+from oscar.core.loading import get_model
 
 ConditionalOffer = get_model('offer', 'ConditionalOffer')
 Voucher = get_model('voucher', 'Voucher')
@@ -140,7 +141,7 @@ class IndexView(TemplateView):
     def get_stats(self):
         datetime_24hrs_ago = now() - timedelta(hours=24)
 
-        orders = Order.objects.filter()
+        orders = Order.objects.all()
         orders_last_day = orders.filter(date_placed__gt=datetime_24hrs_ago)
 
         open_alerts = StockAlert.objects.filter(status=StockAlert.OPEN)
@@ -180,7 +181,7 @@ class IndexView(TemplateView):
             'total_customers': User.objects.count(),
             'total_open_baskets': self.get_open_baskets().count(),
             'total_orders': orders.count(),
-            'total_lines': Line.objects.filter(order__in=orders).count(),
+            'total_lines': Line.objects.count(),
             'total_revenue': orders.aggregate(
                 Sum('total_incl_tax')
             )['total_incl_tax__sum'] or D('0.00'),

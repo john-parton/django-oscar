@@ -154,8 +154,6 @@ included in the repo. This customises core Oscar to treat all prices as
 excluding tax and then calculate and apply taxes once the shipping address is
 known.
 
-See :ref:`us_site` for more information.
-
 Faceting for category browsing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -266,7 +264,7 @@ Minor changes
 
 * ... and dozens of bugs fixed!
 
-.. _django-tables2: http://django-tables2.readthedocs.org/en/latest/
+.. _django-tables2: https://django-tables2.readthedocs.io/en/latest/
 .. _bootstrap-datetimepicker: http://www.malot.fr/bootstrap-datetimepicker/
 
 

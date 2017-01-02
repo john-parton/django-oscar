@@ -1,27 +1,27 @@
 import itertools
-import os
 import operator
+import os
 import re
-from decimal import Decimal as D, ROUND_DOWN
+from decimal import Decimal as D
+from decimal import ROUND_DOWN
 
-from django.db import models
-from django.db.models.query import Q
+from django.conf import settings
 from django.core import exceptions
 from django.core.urlresolvers import reverse
+from django.db import models
+from django.db.models.query import Q
 from django.template.defaultfilters import date as date_filter
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
-from django.utils.timezone import now, get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
 
 from oscar.apps.offer import results, utils
 from oscar.apps.offer.managers import ActiveOfferManager
 from oscar.core.compat import AUTH_USER_MODEL
-from oscar.core.loading import get_model, get_class
+from oscar.core.loading import get_class, get_model
 from oscar.models import fields
 from oscar.templatetags.currency_filters import currency
-
 
 BrowsableRangeManager = get_class('offer.managers', 'BrowsableRangeManager')
 
@@ -89,7 +89,8 @@ class AbstractConditionalOffer(models.Model):
 
     # Use this field to limit the number of times this offer can be applied in
     # total.  Note that a single order can apply an offer multiple times so
-    # this is not the same as the number of orders that can use it.
+    # this is not necessarily the same as the number of orders that can use it.
+    # Also see max_basket_applications.
     max_global_applications = models.PositiveIntegerField(
         _("Max global applications"),
         help_text=_("The number of times this offer can be used before it "
@@ -104,7 +105,8 @@ class AbstractConditionalOffer(models.Model):
         blank=True, null=True)
 
     # Use this field to limit the number of times this offer can be applied to
-    # a basket (and hence a single order).
+    # a basket (and hence a single order). Often, an offer should only be
+    # usable once per basket/order, so this field will commonly be set to 1.
     max_basket_applications = models.PositiveIntegerField(
         _("Max basket applications"),
         blank=True, null=True,
@@ -121,6 +123,8 @@ class AbstractConditionalOffer(models.Model):
                     "unavailable"))
 
     # TRACKING
+    # These fields are used to enforce the limits set by the
+    # max_* fields above.
 
     total_discount = models.DecimalField(
         _("Total Discount"), decimal_places=2, max_digits=12,
@@ -372,7 +376,7 @@ class AbstractConditionalOffer(models.Model):
             # Return ALL the products
             queryset = Product.browsable
         else:
-            queryset = cond_range.included_products
+            queryset = cond_range.all_products()
         return queryset.filter(is_discountable=True).exclude(
             structure=Product.CHILD)
 
@@ -418,7 +422,7 @@ class AbstractBenefit(models.Model):
     # A custom benefit class can be used instead.  This means the
     # type/value/max_affected_items fields should all be None.
     proxy_class = fields.NullCharField(
-        _("Custom class"), max_length=255, unique=True, default=None)
+        _("Custom class"), max_length=255, default=None)
 
     class Meta:
         abstract = True
@@ -843,6 +847,12 @@ class AbstractRange(models.Model):
         """
         RangeProduct = get_model('offer', 'RangeProduct')
         RangeProduct.objects.filter(range=self, product=product).delete()
+        # Making sure product will be excluded from range products list by adding to
+        # respective field. Otherwise, it could be included as a product from included
+        # category or etc.
+        self.excluded_products.add(product)
+        # Invalidating cached property value with list of IDs of already excluded products.
+        self.invalidate_cached_ids()
 
     def contains_product(self, product):  # noqa (too complex (12))
         """
@@ -858,7 +868,7 @@ class AbstractRange(models.Model):
             return False
         if self.includes_all_products:
             return True
-        if product.product_class_id in self._class_ids():
+        if product.get_product_class().id in self._class_ids():
             return True
         included_product_ids = self._included_product_ids()
         # If the product's parent is in the range, the child is automatically included as well
@@ -926,6 +936,11 @@ class AbstractRange(models.Model):
 
         return self.__category_ids
 
+    def invalidate_cached_ids(self):
+        self.__category_ids = None
+        self.__included_product_ids = None
+        self.__excluded_product_ids = None
+
     def num_products(self):
         # Delegate to a proxy class if one is provided
         if self.proxy:
@@ -954,14 +969,21 @@ class AbstractRange(models.Model):
             Q(id__in=self._included_product_ids()) |
             Q(product_class_id__in=self._class_ids()) |
             Q(productcategory__category_id__in=self._category_ids())
-        ).exclude(id__in=self._excluded_product_ids())
+        ).exclude(id__in=self._excluded_product_ids()).distinct()
 
     @property
     def is_editable(self):
         """
-        Test whether this product can be edited in the dashboard
+        Test whether this range can be edited in the dashboard.
         """
         return not self.proxy_class
+
+    @property
+    def is_reorderable(self):
+        """
+        Test whether products for the range can be re-ordered.
+        """
+        return len(self._class_ids()) == 0 and len(self._category_ids()) == 0
 
 
 class AbstractRangeProduct(models.Model):
@@ -1041,7 +1063,7 @@ class AbstractRangeProductFileUpload(models.Model):
         Process the file upload and add products to the range
         """
         all_ids = set(self.extract_ids())
-        products = self.range.included_products.all()
+        products = self.range.all_products()
         existing_skus = products.values_list(
             'stockrecords__partner_sku', flat=True)
         existing_skus = set(filter(bool, existing_skus))

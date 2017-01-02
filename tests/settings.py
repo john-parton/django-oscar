@@ -6,7 +6,13 @@ from oscar.defaults import *  # noqa
 # Path helper
 location = lambda x: os.path.join(os.path.dirname(os.path.realpath(__file__)), x)
 
-DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': ':memory:', }, }
+DATABASES = {
+    'default': {
+        'ENGINE': os.environ.get('DATABASE_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.environ.get('DATABASE_NAME', ':memory:'),
+    },
+}
+
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.admin',
@@ -15,7 +21,6 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.flatpages',
     'django.contrib.staticfiles',
-    'compressor',
     'widget_tweaks',
 
     # contains models we need for testing
@@ -28,55 +33,70 @@ INSTALLED_APPS = [
 ] + oscar.get_core_apps(['tests._site.apps.partner', 'tests._site.apps.customer'])
 
 AUTH_USER_MODEL = 'myauth.User'
-TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.contrib.auth.context_processors.auth",
-    "django.core.context_processors.request",
-    "django.core.context_processors.debug",
-    "django.core.context_processors.i18n",
-    "django.core.context_processors.media",
-    "django.core.context_processors.static",
-    "django.contrib.messages.context_processors.messages",
-    'oscar.apps.search.context_processors.search_form',
-    'oscar.apps.customer.notifications.context_processors.notifications',
-    'oscar.apps.promotions.context_processors.promotions',
-    'oscar.apps.checkout.context_processors.checkout',
-    'oscar.core.context_processors.metadata',
-)
-TEMPLATE_DIRS = (
-    location('_site/templates'),
-    oscar.OSCAR_MAIN_TEMPLATE_DIR,
-)
-TEMPLATE_LOADERS = (
-    ('django.template.loaders.cached.Loader',
-     ['django.template.loaders.filesystem.Loader',
-      'django.template.loaders.app_directories.Loader',
-      'django.template.loaders.eggs.Loader']),
-)
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            location('_site/templates'),
+            oscar.OSCAR_MAIN_TEMPLATE_DIR,
+        ],
+        'OPTIONS': {
+            'loaders': [
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                    'django.template.loaders.eggs.Loader'
+                ]),
+            ],
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.request',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.contrib.messages.context_processors.messages',
+
+                'oscar.apps.search.context_processors.search_form',
+                'oscar.apps.customer.notifications.context_processors.notifications',
+                'oscar.apps.promotions.context_processors.promotions',
+                'oscar.apps.checkout.context_processors.checkout',
+                'oscar.core.context_processors.metadata',
+            ]
+        }
+    }
+]
+
+
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'oscar.apps.basket.middleware.BasketMiddleware',
 )
+
 AUTHENTICATION_BACKENDS = (
     'oscar.apps.customer.auth_backends.EmailBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
+
 HAYSTACK_CONNECTIONS = {'default': {'ENGINE': 'haystack.backends.simple_backend.SimpleEngine'}}
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 ROOT_URLCONF = 'tests._site.urls'
 LOGIN_REDIRECT_URL = '/accounts/'
 STATIC_URL = '/static/'
-COMPRESS_ENABLED = False
-COMPRESS_ROOT = ''  # needed to avoid issue #1214
 DEBUG = False
 SITE_ID = 1
 USE_TZ = 1
 APPEND_SLASH = True
 DDF_DEFAULT_DATA_FIXTURE = 'tests.dynamic_fixtures.OscarDynamicDataFixtureClass'
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
+LANGUAGE_CODE = 'en-gb'
+
 
 # temporary workaround for issue in sorl-thumbnail in Python 3
 # https://github.com/mariocesar/sorl-thumbnail/pull/254

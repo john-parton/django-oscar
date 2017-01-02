@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+
 from oscar.core.compat import AUTH_USER_MODEL
 
 
@@ -17,7 +18,7 @@ class AbstractProductRecord(models.Model):
 
     product = models.OneToOneField(
         'catalogue.Product', verbose_name=_("Product"),
-        related_name='stats')
+        related_name='stats', on_delete=models.CASCADE)
 
     # Data used for generating a score
     num_views = models.PositiveIntegerField(_('Views'), default=0)
@@ -45,7 +46,8 @@ class AbstractUserRecord(models.Model):
     A record of a user's activity.
     """
 
-    user = models.OneToOneField(AUTH_USER_MODEL, verbose_name=_("User"))
+    user = models.OneToOneField(AUTH_USER_MODEL, verbose_name=_("User"),
+                                on_delete=models.CASCADE)
 
     # Browsing stats
     num_product_views = models.PositiveIntegerField(

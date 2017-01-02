@@ -4,10 +4,10 @@ from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
-from oscar.core.utils import get_default_currency
 from oscar.core.compat import AUTH_USER_MODEL
-from oscar.templatetags.currency_filters import currency
+from oscar.core.utils import get_default_currency
 from oscar.models.fields import AutoSlugField
+from oscar.templatetags.currency_filters import currency
 
 from . import bankcards
 
@@ -88,7 +88,7 @@ class AbstractSource(models.Model):
 
     # Reference number for this payment source.  This is often used to look up
     # a transaction model for a particular payment partner.
-    reference = models.CharField(_("Reference"), max_length=128, blank=True)
+    reference = models.CharField(_("Reference"), max_length=255, blank=True)
 
     # A customer-friendly label for the source, eg XXXX-XXXX-XXXX-1234
     label = models.CharField(_("Label"), max_length=128, blank=True)

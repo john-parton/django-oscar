@@ -2,13 +2,14 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models import Sum, Count
+from django.db.models import Count, Sum
 from django.utils.encoding import python_2_unicode_compatible
-from django.utils.translation import ugettext_lazy as _, pgettext_lazy
+from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import pgettext_lazy
 
-from oscar.apps.catalogue.reviews.managers import ApprovedReviewsManager
-from oscar.core.compat import AUTH_USER_MODEL
+from oscar.apps.catalogue.reviews.managers import ProductReviewQuerySet
 from oscar.core import validators
+from oscar.core.compat import AUTH_USER_MODEL
 
 
 @python_2_unicode_compatible
@@ -42,8 +43,7 @@ class AbstractProductReview(models.Model):
     name = models.CharField(
         pgettext_lazy(u"Anonymous reviewer name", u"Name"),
         max_length=255, blank=True)
-    # TODO Remove the max_length kwarg when support for Django 1.7 is dropped
-    email = models.EmailField(_("Email"), max_length=75, blank=True)
+    email = models.EmailField(_("Email"), blank=True)
     homepage = models.URLField(_("URL"), blank=True)
 
     FOR_MODERATION, APPROVED, REJECTED = 0, 1, 2
@@ -67,8 +67,7 @@ class AbstractProductReview(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
 
     # Managers
-    objects = models.Manager()
-    approved = ApprovedReviewsManager()
+    objects = ProductReviewQuerySet.as_manager()
 
     class Meta:
         abstract = True

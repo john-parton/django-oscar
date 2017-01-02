@@ -1,7 +1,7 @@
 from django import forms
 from django.conf import settings
-from django.forms.models import modelformset_factory, BaseModelFormSet
 from django.db.models import Sum
+from django.forms.models import BaseModelFormSet, modelformset_factory
 from django.utils.translation import ugettext_lazy as _
 
 from oscar.core.loading import get_model
@@ -28,7 +28,13 @@ class BasketLineForm(forms.ModelForm):
         return qty
 
     def check_max_allowed_quantity(self, qty):
-        is_allowed, reason = self.instance.basket.is_quantity_allowed(qty)
+        # Since `Basket.is_quantity_allowed` checks quantity of added product
+        # against total number of the products in the basket, instead of sending
+        # updated quantity of the product, we send difference between current
+        # number and updated. Thus, product already in the basket and we don't
+        # add second time, just updating number of items.
+        qty_delta = qty - self.instance.quantity
+        is_allowed, reason = self.instance.basket.is_quantity_allowed(qty_delta)
         if not is_allowed:
             raise forms.ValidationError(reason)
 
